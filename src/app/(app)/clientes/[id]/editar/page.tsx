@@ -10,7 +10,7 @@ export default async function EditarCliente({ params }: PageProps<"/clientes/[id
   const { supabase } = await obtenerContexto();
   const { data: cliente } = await supabase
     .from("clientes")
-    .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion")
+    .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion, etiquetas")
     .eq("id", id)
     .maybeSingle<Cliente>();
   if (!cliente) notFound();
@@ -20,7 +20,7 @@ export default async function EditarCliente({ params }: PageProps<"/clientes/[id
       <Encabezado
         icono={PencilLine}
         titulo="Editar datos"
-        descripcion="Corregí los datos de contacto. El cambio queda registrado en el historial de auditoría."
+        descripcion="Corregí los datos de contacto y sumá etiquetas. Cada cambio queda registrado."
         volver={{ href: `/clientes/${id}`, texto: cliente.nombre_completo }}
       />
       <FormularioEditarCliente cliente={cliente} />

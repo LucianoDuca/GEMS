@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { CalendarCheck, ChevronRight, Search, Sparkles, UserPlus, Users, Wallet } from "lucide-react";
+import { CalendarCheck, ChevronRight, Sparkles, UserPlus, Users, Wallet } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
 import { hora, hoyAR, pesos, rangoDia } from "@/lib/formato";
-import { etiquetaCategoria, type Categoria } from "@/lib/tipos";
-import { Accion, Avatar, Boton, Etiqueta, Indicador, Tarjeta, Vacio } from "@/components/ui";
+import type { Categoria } from "@/lib/tipos";
+import { Accion, Avatar, Indicador, Tarjeta, Vacio } from "@/components/ui";
+import { EtiquetaCategoria } from "@/components/categoria";
+import { BuscadorClientes } from "@/components/buscador-clientes";
 
 function saludo() {
   const horaAR = Number(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "numeric", hourCycle: "h23" }).format(new Date()));
@@ -43,20 +45,9 @@ export default async function Inicio() {
           <p className="text-sm font-medium text-white/80 first-letter:uppercase">{fechaLarga}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{saludo()}, {primerNombre}</h1>
           <p className="mt-1 text-white/85">¿A quién atendés ahora? Buscá por DNI o por nombre.</p>
-          <form action="/clientes" className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <label className="relative flex-1">
-              <span className="sr-only">DNI o nombre</span>
-              <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-suave" aria-hidden />
-              <input
-                name="q"
-                placeholder="Ej.: 30111222 o María"
-                inputMode="search"
-                autoComplete="off"
-                className="w-full rounded-2xl border-0 bg-white py-4 pl-12 pr-4 text-lg text-tinta shadow-lg outline-none placeholder:text-suave/60 focus:ring-4 focus:ring-white/40"
-              />
-            </label>
-            <Boton type="submit" variante="celeste" tamano="grande" icono={Search}>Buscar</Boton>
-          </form>
+          <div className="mt-5">
+            <BuscadorClientes grande />
+          </div>
         </div>
       </section>
 
@@ -86,7 +77,7 @@ export default async function Inicio() {
                       <span className={`block truncate font-semibold ${s.anulada ? "line-through" : ""}`}>{cliente.nombre_completo}</span>
                       <span className="block text-sm text-suave">{hora(s.realizada_en)} · Sesión {s.numero}</span>
                     </span>
-                    <Etiqueta tono={s.categoria === "depilacion" ? "celeste" : "lila"}>{etiquetaCategoria(s.categoria as Categoria)}</Etiqueta>
+                    <EtiquetaCategoria categoria={s.categoria as Categoria} />
                     <ChevronRight className="size-5 text-suave/60" aria-hidden />
                   </Link>
                 </li>

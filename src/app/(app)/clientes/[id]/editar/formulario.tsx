@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { IdCard, Save } from "lucide-react";
+import { IdCard, Save, Tag } from "lucide-react";
+import { EtiquetasCliente } from "@/components/etiquetas-cliente";
 import { Boton, Campo, Input, MensajeError, Tarjeta } from "@/components/ui";
 import type { Cliente } from "@/lib/tipos";
 import { actualizarCliente } from "../../../acciones";
@@ -31,6 +32,10 @@ export function FormularioEditarCliente({ cliente }: { cliente: Cliente }) {
             </Campo>
           </div>
         </div>
+      </Tarjeta>
+      <Tarjeta titulo="Etiquetas" icono={Tag}>
+        <p className="-mt-2 mb-4 text-sm text-suave">Notas rápidas que se ven arriba de todo en la ficha del cliente.</p>
+        <EtiquetasCliente iniciales={cliente.etiquetas ?? []} />
       </Tarjeta>
       <MensajeError>{estado?.error}</MensajeError>
       <div className="flex justify-end">

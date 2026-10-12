@@ -1,53 +1,72 @@
 import { notFound } from "next/navigation";
+import { CalendarPlus } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
+import { fecha } from "@/lib/formato";
 import { textoAlerta } from "@/lib/ficha-salud";
 import type { Categoria } from "@/lib/tipos";
-import { CalendarPlus } from "lucide-react";
-import { Alerta, Encabezado } from "@/components/ui";
-import { FormularioSesion } from "./formulario";
+import { Encabezado } from "@/components/ui";
+import { FormularioSesion, type UltimaSesion } from "./formulario";
+
+type SesionPrevia = {
+  categoria: Categoria;
+  realizada_en: string;
+  potencia: string | null;
+  sesion_tratamientos: { tratamiento_id: string }[];
+  sesion_zonas: { zona_id: string }[];
+};
 
 export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/sesion">) {
   const { id } = await params;
   const { supabase } = await obtenerContexto();
 
-  const [{ data: cliente }, { data: ficha }, { data: tratamientos }, { data: zonas }, { data: ultima }] = await Promise.all([
+  const [{ data: cliente }, { data: ficha }, { data: tratamientos }, { data: zonas }, { data: previas }] = await Promise.all([
     supabase.from("clientes").select("nombre_completo, dni").eq("id", id).maybeSingle(),
     supabase.from("fichas_vigentes").select("alertas, respuestas").eq("cliente_id", id).maybeSingle(),
     supabase.from("tratamientos").select("id, nombre, categoria").eq("activo", true).order("orden"),
     supabase.from("zonas").select("id, nombre, abreviatura, categoria").eq("activo", true).order("orden"),
-    supabase.from("sesiones").select("categoria").eq("cliente_id", id).eq("anulada", false).order("realizada_en", { ascending: false }).limit(1).maybeSingle(),
+    supabase
+      .from("sesiones")
+      .select("categoria, realizada_en, potencia, sesion_tratamientos (tratamiento_id), sesion_zonas (zona_id)")
+      .eq("cliente_id", id)
+      .eq("anulada", false)
+      .order("realizada_en", { ascending: false })
+      .limit(20)
+      .returns<SesionPrevia[]>(),
   ]);
   if (!cliente) notFound();
 
-  const alertas = (ficha?.alertas ?? []) as string[];
   const respuestas = (ficha?.respuestas ?? {}) as Record<string, { detalle?: string }>;
+  const alertas = ((ficha?.alertas ?? []) as string[]).map((a) => `${textoAlerta(a)}${respuestas[a]?.detalle ? `: ${respuestas[a].detalle}` : ""}`);
+
+  // La última sesión de cada tipo, para poder repetirla con un toque.
+  const ultimas: UltimaSesion[] = [];
+  for (const s of previas ?? []) {
+    if (ultimas.some((u) => u.categoria === s.categoria)) continue;
+    ultimas.push({
+      categoria: s.categoria,
+      fecha: fecha(s.realizada_en),
+      tratamientos: s.sesion_tratamientos.map((t) => t.tratamiento_id),
+      zonas: s.sesion_zonas.map((z) => z.zona_id),
+      potencia: s.potencia,
+    });
+  }
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <Encabezado
         icono={CalendarPlus}
         titulo="Registrar sesión"
         descripcion={`${cliente.nombre_completo} · DNI ${cliente.dni}`}
         volver={{ href: `/clientes/${id}`, texto: cliente.nombre_completo }}
       />
-
-      {alertas.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-alerta/30 bg-alerta-claro p-4">
-          <p className="text-sm font-semibold text-alerta">Revisar antes de tratar</p>
-          <div className="flex flex-wrap gap-2">
-            {alertas.map((a) => (
-              <Alerta key={a}>{textoAlerta(a)}{respuestas[a]?.detalle && `: ${respuestas[a].detalle}`}</Alerta>
-            ))}
-          </div>
-        </div>
-      )}
-
       <FormularioSesion
         clienteId={id}
         tratamientos={(tratamientos ?? []) as { id: string; nombre: string; categoria: Categoria }[]}
         zonas={(zonas ?? []) as { id: string; nombre: string; abreviatura: string | null; categoria: Categoria }[]}
-        categoriaInicial={(ultima?.categoria as Categoria) ?? "depilacion"}
+        categoriaInicial={ultimas[0]?.categoria ?? "depilacion"}
+        ultimas={ultimas}
+        alertas={alertas}
       />
-    </div>
+    </>
   );
 }

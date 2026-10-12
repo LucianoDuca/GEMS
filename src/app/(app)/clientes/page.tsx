@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, Search, TriangleAlert, UserPlus, Users } from "lucide-react";
+import { ChevronRight, TriangleAlert, UserPlus, Users } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
 import { fecha } from "@/lib/formato";
 import type { Cliente } from "@/lib/tipos";
-import { Avatar, Boton, BotonLink, Encabezado, Etiqueta, Tarjeta, Vacio } from "@/components/ui";
+import { Avatar, BotonLink, Encabezado, Etiqueta, Tarjeta, Vacio } from "@/components/ui";
+import { BuscadorClientes } from "@/components/buscador-clientes";
 
 export default async function Clientes({ searchParams }: PageProps<"/clientes">) {
   const { supabase } = await obtenerContexto();
@@ -45,21 +46,9 @@ export default async function Clientes({ searchParams }: PageProps<"/clientes">)
         acciones={<BotonLink href={esDni ? `/clientes/nuevo?dni=${dni}` : "/clientes/nuevo"} icono={UserPlus}>Alta de cliente</BotonLink>}
       />
 
-      <form action="/clientes" className="mb-6 flex gap-2">
-        <label className="relative flex-1">
-          <span className="sr-only">DNI o nombre</span>
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-suave" aria-hidden />
-          <input
-            name="q"
-            defaultValue={busqueda}
-            placeholder="DNI o nombre"
-            inputMode="search"
-            autoComplete="off"
-            className="w-full rounded-2xl border border-borde bg-white py-3.5 pl-12 pr-4 text-base outline-none focus:border-lila focus:ring-4 focus:ring-lila/15"
-          />
-        </label>
-        <Boton type="submit" className="shrink-0 px-6">Buscar</Boton>
-      </form>
+      <div className="mb-6">
+        <BuscadorClientes valorInicial={busqueda} />
+      </div>
 
       <Tarjeta titulo={busqueda ? `Resultados para “${busqueda}”` : "Últimos clientes"}>
         {clientes.length === 0 ? (

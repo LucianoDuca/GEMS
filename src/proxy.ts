@@ -43,5 +43,6 @@ function redirigir(request: NextRequest, response: NextResponse, ruta: string) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:jpg|png|svg|ico)$).*)"],
+  // Archivos públicos (imágenes, íconos, manifest de la app) pasan sin pedir login.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:jpg|png|svg|ico|webmanifest)$).*)"],
 };

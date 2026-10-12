@@ -9,10 +9,14 @@ import { MEDIOS_PAGO, CATEGORIAS, type EstadoFormulario } from "@/lib/tipos";
 const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? "").trim();
 const normalizarDni = (dni: string) => dni.replace(/[.\s-]/g, "");
 
+const aviso = (texto: string) => `aviso=${encodeURIComponent(texto)}`;
+
 function leerFicha(formData: FormData) {
   const faltaConsentimiento = CONSENTIMIENTOS.some((c) => formData.get(`c_${c.id}`) !== "on");
   const respuestas = leerRespuestas(formData);
-  return { respuestas, alertas: calcularAlertas(respuestas), faltaConsentimiento };
+  const firma = String(formData.get("firma") ?? "");
+  const firmaValida = firma.startsWith("data:image/png;base64,") && firma.length < 400000;
+  return { respuestas, alertas: calcularAlertas(respuestas), faltaConsentimiento, firma: firmaValida ? firma : null };
 }
 
 export async function crearCliente(_: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
@@ -23,8 +27,9 @@ export async function crearCliente(_: EstadoFormulario, formData: FormData): Pro
   if (!/^[0-9A-Za-z]{4,12}$/.test(dni)) return { error: "El DNI no es válido." };
   if (!nombre) return { error: "Falta el nombre y apellido." };
 
-  const { respuestas, alertas, faltaConsentimiento } = leerFicha(formData);
-  if (faltaConsentimiento) return { error: "La clienta tiene que aceptar las tres declaraciones." };
+  const { respuestas, alertas, faltaConsentimiento, firma } = leerFicha(formData);
+  if (faltaConsentimiento) return { error: "Faltan aceptar las tres declaraciones del final." };
+  if (!firma) return { error: "Falta la firma en el recuadro del final." };
 
   const { data: id, error } = await supabase.rpc("alta_cliente", {
     p_centro_id: centroId,
@@ -36,6 +41,7 @@ export async function crearCliente(_: EstadoFormulario, formData: FormData): Pro
     p_respuestas: respuestas,
     p_alertas: alertas,
     p_consentimiento: true,
+    p_firma: firma,
   });
 
   if (error) {
@@ -43,14 +49,15 @@ export async function crearCliente(_: EstadoFormulario, formData: FormData): Pro
     return { error: "No se pudo guardar. Probá de nuevo." };
   }
 
-  redirect(`/clientes/${id}`);
+  redirect(`/clientes/${id}?${aviso(`Alta de ${nombre} lista`)}`);
 }
 
 export async function actualizarFicha(clienteId: string, _: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
   const { supabase, centroId } = await obtenerContexto();
 
-  const { respuestas, alertas, faltaConsentimiento } = leerFicha(formData);
-  if (faltaConsentimiento) return { error: "La clienta tiene que aceptar las tres declaraciones." };
+  const { respuestas, alertas, faltaConsentimiento, firma } = leerFicha(formData);
+  if (faltaConsentimiento) return { error: "Faltan aceptar las tres declaraciones del final." };
+  if (!firma) return { error: "Falta la firma en el recuadro del final." };
 
   const { error } = await supabase.from("fichas_salud").insert({
     centro_id: centroId,
@@ -59,10 +66,11 @@ export async function actualizarFicha(clienteId: string, _: EstadoFormulario, fo
     respuestas,
     alertas,
     consentimiento_aceptado: true,
+    firma,
   });
   if (error) return { error: "No se pudo guardar la ficha." };
 
-  redirect(`/clientes/${clienteId}`);
+  redirect(`/clientes/${clienteId}?${aviso("Ficha de salud actualizada")}`);
 }
 
 export async function registrarSesion(clienteId: string, _: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
@@ -106,7 +114,7 @@ export async function registrarSesion(clienteId: string, _: EstadoFormulario, fo
     if (errorCaja) return { error: "La sesión se guardó, pero el cobro no. Cargalo desde Caja." };
   }
 
-  redirect(`/clientes/${clienteId}`);
+  redirect(`/clientes/${clienteId}?${aviso(`Sesión ${sesion.numero} guardada${monto > 0 ? " y cobrada" : ""}`)}`);
 }
 
 export async function anularSesion(formData: FormData) {
@@ -155,6 +163,7 @@ export async function actualizarCliente(clienteId: string, _: EstadoFormulario, 
       fecha_nacimiento: texto(formData, "nacimiento") || null,
       telefono: texto(formData, "telefono") || null,
       direccion: texto(formData, "direccion") || null,
+      etiquetas: formData.getAll("etiquetas").map((e) => String(e).trim()).filter(Boolean).slice(0, 12),
     })
     .eq("id", clienteId);
   if (error) {
@@ -162,7 +171,7 @@ export async function actualizarCliente(clienteId: string, _: EstadoFormulario, 
     return { error: "No se pudieron guardar los cambios." };
   }
 
-  redirect(`/clientes/${clienteId}`);
+  redirect(`/clientes/${clienteId}?${aviso("Datos guardados")}`);
 }
 
 export async function anularMovimiento(formData: FormData) {
@@ -171,5 +180,26 @@ export async function anularMovimiento(formData: FormData) {
   if (!motivo) return;
   await supabase.rpc("anular_movimiento", { p_movimiento_id: texto(formData, "movimiento_id"), p_motivo: motivo });
   revalidatePath("/caja");
+  revalidatePath("/");
+}
+
+// Búsqueda mientras se escribe: devuelve pocos resultados livianos.
+export async function buscarClientes(consulta: string) {
+  const { supabase } = await obtenerContexto();
+  const q = consulta.trim();
+  if (q.length < 2) return [];
+  const dni = q.replace(/[.\s-]/g, "");
+  const base = supabase.from("clientes").select("id, nombre_completo, dni, etiquetas").limit(8);
+  const { data } = /^[0-9]+$/.test(dni)
+    ? await base.like("dni", `${dni}%`).order("dni")
+    : await base.ilike("nombre_completo", `%${q.replace(/[%_]/g, "")}%`).order("nombre_completo");
+  return (data ?? []) as { id: string; nombre_completo: string; dni: string; etiquetas: string[] }[];
+}
+
+export async function marcarContactado(formData: FormData) {
+  const { supabase, centroId } = await obtenerContexto();
+  const motivo = texto(formData, "motivo");
+  if (!["proxima_sesion", "cumpleanos", "otro"].includes(motivo)) return;
+  await supabase.from("contactos").insert({ centro_id: centroId, cliente_id: texto(formData, "cliente_id"), motivo });
   revalidatePath("/");
 }

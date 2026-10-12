@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Cake } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Tag, Cake } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
 import { edad, fecha, fechaHora, pesos } from "@/lib/formato";
 import { PREGUNTAS, textoAlerta } from "@/lib/ficha-salud";
-import { etiquetaCategoria, type Categoria, type Cliente, type Ficha } from "@/lib/tipos";
+import type { Categoria, Cliente, Ficha } from "@/lib/tipos";
 import { Alerta, Avatar, Boton, BotonLink, Etiqueta, Input, Tarjeta, Vacio } from "@/components/ui";
+import { EtiquetaCategoria } from "@/components/categoria";
 import { anularSesion } from "../../acciones";
 
 type SesionHistorial = {
@@ -28,7 +29,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
 
   const { data: cliente } = await supabase
     .from("clientes")
-    .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion")
+    .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion, etiquetas")
     .eq("id", id)
     .maybeSingle<Cliente>();
   if (!cliente) notFound();
@@ -37,7 +38,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
   await supabase.rpc("registrar_consulta_ficha", { p_cliente_id: id });
 
   const [{ data: ficha }, { data: totales }, { data: sesiones }, { data: miembros }, { data: pagos }] = await Promise.all([
-    supabase.from("fichas_vigentes").select("id, version, respuestas, alertas, firmada_en").eq("cliente_id", id).maybeSingle<Ficha>(),
+    supabase.from("fichas_vigentes").select("id, version, respuestas, alertas, firmada_en, firma").eq("cliente_id", id).maybeSingle<Ficha>(),
     supabase.from("totales_tratamiento").select("tratamiento, categoria, sesiones, ultima_sesion").eq("cliente_id", id).order("sesiones", { ascending: false }),
     supabase
       .from("sesiones")
@@ -80,6 +81,16 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
                 {cliente.telefono && <a href={`tel:${cliente.telefono}`} className="inline-flex items-center gap-1.5 hover:text-white"><Phone className="size-4" aria-hidden />{cliente.telefono}</a>}
                 {cliente.direccion && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" aria-hidden />{cliente.direccion}</span>}
               </div>
+              {(cliente.etiquetas?.length ?? 0) > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {cliente.etiquetas!.map((e) => (
+                    <span key={e} className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold text-white ring-1 ring-white/30">
+                      <Tag className="size-3" aria-hidden />
+                      {e}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="relative flex flex-col gap-2 sm:flex-row">
@@ -128,7 +139,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
                 <div className={`rounded-2xl border border-borde/80 p-4 ${s.anulada ? "bg-fondo opacity-60" : "bg-white"}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Etiqueta tono={s.categoria === "depilacion" ? "celeste" : "lila"}>{etiquetaCategoria(s.categoria)}</Etiqueta>
+                      <EtiquetaCategoria categoria={s.categoria} />
                       <span className="font-semibold">Sesión {s.numero}</span>
                       {s.anulada && <Etiqueta tono="alerta">Anulada</Etiqueta>}
                     </div>
@@ -228,6 +239,13 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
                 <div className="py-2.5">
                   <dt className="text-suave">Observaciones</dt>
                   <dd className="mt-1">{ficha.respuestas.observaciones.detalle}</dd>
+                </div>
+              )}
+              {ficha.firma && (
+                <div className="py-2.5">
+                  <dt className="text-suave">Firma · {fecha(ficha.firmada_en)}</dt>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- imagen guardada como data URL */}
+                  <dd className="mt-2"><img src={ficha.firma} alt="Firma de la ficha de salud" className="h-24 w-auto rounded-xl border border-borde bg-white p-2" /></dd>
                 </div>
               )}
             </dl>

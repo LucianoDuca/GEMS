@@ -146,5 +146,25 @@ await como(ADMIN, `insert into cobros_gems (centro_id, concepto, monto, medio) v
 espera((await n(DUENA, "select count(*)::int n from cobros_gems")) === 0, "las estéticas no ven los cobros de GEMS");
 espera((await como(ADMIN, "delete from cobros_gems")).affectedRows === 0, "los cobros de GEMS no se borran");
 
+console.log("\nExperiencia: firma, etiquetas, contactos y fotos");
+const firma = "data:image/png;base64,iVBORw0KGgo=";
+const conFirma = (await como(DUENA, `select alta_cliente('${C}','42000001','Con Firma',null,'','','{}','{}',true,$1) id`, [firma])).rows[0].id;
+espera((await como(DUENA, "select firma n from fichas_vigentes where cliente_id=$1", [conFirma])).rows[0].n === firma, "la ficha guarda la firma en pantalla");
+await rechaza(como(DUENA, `select alta_cliente('${C}','42000002','Mala',null,'','','{}','{}',true,'javascript:alert(1)')`), "una firma que no es imagen se rechaza");
+espera((await como(OPERA, "update clientes set etiquetas='{Piel sensible,VIP}' where id=$1", [conFirma])).affectedRows === 1, "se pueden poner etiquetas a un cliente");
+espera((await como(DUENA, "select numero n from ultimas_sesiones where cliente_id=$1 and categoria='reductor'", [cli])).rows[0].n === 1, "última sesión por tipo (ignora las anuladas)");
+espera((await n(OTRO, "select count(*)::int n from ultimas_sesiones")) === 0, "otro centro no ve las últimas sesiones ajenas");
+await como(OPERA, `insert into contactos (centro_id, cliente_id, motivo) values ('${C}',$1,'cumpleanos')`, [cli]);
+espera((await n(DUENA, "select count(*)::int n from contactos")) === 1, "se registra que se contactó a un cliente");
+espera((await n(OTRO, "select count(*)::int n from contactos")) === 0, "otro centro no ve contactos ajenos");
+await como(OPERA, `insert into fotos (centro_id, cliente_id, tipo, ruta, consentimiento) values ('${C}',$1,'antes',$2,true)`, [cli, `${C}/${cli}/a.jpg`]);
+ok("se registra una foto con consentimiento");
+await rechaza(como(OPERA, `insert into fotos (centro_id, cliente_id, tipo, ruta, consentimiento) values ('${C}',$1,'antes',$2,false)`, [cli, `${C}/${cli}/b.jpg`]), "sin consentimiento no hay foto");
+await rechaza(como(OPERA, `insert into fotos (centro_id, cliente_id, tipo, ruta, consentimiento) values ('${C}',$1,'antes',$2,true)`, [cli, `${C2}/${cli}/c.jpg`]), "la ruta del archivo tiene que ser del mismo centro");
+espera((await n(OTRO, "select count(*)::int n from fotos")) === 0, "otro centro no ve fotos ajenas");
+espera((await n(ADMIN, "select count(*)::int n from fotos")) === 0, "GEMS no ve las fotos de las clientas");
+espera((await como(OPERA, "delete from fotos")).affectedRows === 0, "una operadora no borra fotos");
+espera((await como(DUENA, "delete from fotos")).affectedRows === 1, "la dueña puede borrar una foto a pedido de la clienta");
+
 console.log(fallas ? `\n${fallas} prueba(s) fallaron` : "\nTodas las pruebas pasaron");
 process.exit(fallas ? 1 : 0);

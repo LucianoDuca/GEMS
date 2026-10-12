@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CONSENTIMIENTOS, SECCIONES, type Pregunta, type Respuestas } from "@/lib/ficha-salud";
 import { Input, Textarea } from "@/components/ui";
+import { Firma } from "@/components/firma";
 
 export function CamposFicha({ previa }: { previa?: Respuestas }) {
   return (
@@ -21,14 +22,16 @@ export function CamposFicha({ previa }: { previa?: Respuestas }) {
         <Textarea name="observaciones" defaultValue={previa?.observaciones?.detalle} />
       </label>
 
-      <fieldset className="flex flex-col gap-3 rounded-xl bg-lila-claro p-4">
-        <legend className="sr-only">Declaraciones</legend>
+      <fieldset className="flex flex-col gap-4 rounded-2xl bg-lila-claro p-5">
+        <legend className="sr-only">Declaraciones y firma</legend>
+        <p className="text-sm font-semibold text-lila">Para terminar, que la persona lea, marque y firme:</p>
         {CONSENTIMIENTOS.map((c) => (
-          <label key={c.id} className="flex items-start gap-3 text-sm">
-            <input type="checkbox" name={`c_${c.id}`} required className="mt-0.5 size-5 accent-lila" />
+          <label key={c.id} className="flex cursor-pointer items-start gap-3 text-sm">
+            <input type="checkbox" name={`c_${c.id}`} required className="mt-0.5 size-5 shrink-0 accent-lila" />
             <span>{c.texto}</span>
           </label>
         ))}
+        <Firma />
       </fieldset>
     </div>
   );

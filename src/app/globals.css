@@ -20,3 +20,30 @@ body {
   background: var(--color-fondo);
   color: var(--color-tinta);
 }
+
+/* ───────── Animaciones suaves ───────── */
+@keyframes entrar-arriba {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dibujar-check {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes latido {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.animar-entrada { animation: entrar-arriba 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.animar-aparecer { animation: aparecer 0.4s ease-out both; }
+.check-animado { stroke-dasharray: 24; animation: dibujar-check 0.45s 0.15s ease-out both; }
+.animar-latido { animation: latido 0.4s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada, .animar-aparecer, .check-animado, .animar-latido { animation: none; }
+}

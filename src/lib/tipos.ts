@@ -31,6 +31,7 @@ export type Cliente = {
   fecha_nacimiento: string | null;
   telefono: string | null;
   direccion: string | null;
+  etiquetas?: string[];
 };
 
 export type Ficha = {
@@ -39,6 +40,7 @@ export type Ficha = {
   respuestas: Record<string, { valor?: string; detalle?: string }>;
   alertas: string[];
   firmada_en: string;
+  firma?: string | null;
 };
 
 export type EstadoFormulario = { error?: string; ok?: string } | undefined;
