@@ -6,6 +6,7 @@ import { Boton, Campo, Input, MensajeError, MensajeOk, Select, Tarjeta, Textarea
 import { MEDIOS_PAGO, type EstadoFormulario } from "@/lib/tipos";
 import { CONCEPTOS, ESTADOS_CENTRO, PLANES, type Centro } from "@/lib/admin-datos";
 import { actualizarEstetica, agregarPersona, crearEstetica, registrarCobro } from "./acciones";
+import { Formulario } from "@/components/formulario";
 
 function useLimpiarAlTerminar(estado: EstadoFormulario) {
   const form = useRef<HTMLFormElement>(null);
@@ -34,7 +35,7 @@ export function FormularioNuevaEstetica() {
   const [estado, accion, enviando] = useActionState(crearEstetica, undefined);
 
   return (
-    <form action={accion} className="flex flex-col gap-6">
+    <Formulario action={accion} className="flex flex-col gap-6">
       <Tarjeta titulo="1. La estética" icono={Building2}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo etiqueta="Nombre del centro">
@@ -76,7 +77,7 @@ export function FormularioNuevaEstetica() {
       <div className="flex justify-end">
         <Boton type="submit" tamano="grande" icono={Save} disabled={enviando}>{enviando ? "Creando…" : "Crear estética"}</Boton>
       </div>
-    </form>
+    </Formulario>
   );
 }
 
@@ -84,7 +85,7 @@ export function FormularioDatosEstetica({ centro }: { centro: Centro }) {
   const [estado, accion, enviando] = useActionState(actualizarEstetica.bind(null, centro.id), undefined);
 
   return (
-    <form action={accion} className="flex flex-col gap-4">
+    <Formulario action={accion} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Campo etiqueta="Nombre del centro">
           <Input name="nombre" defaultValue={centro.nombre} required />
@@ -114,7 +115,7 @@ export function FormularioDatosEstetica({ centro }: { centro: Centro }) {
       <MensajeError>{estado?.error}</MensajeError>
       <MensajeOk>{estado?.ok}</MensajeOk>
       <Boton type="submit" icono={Save} disabled={enviando} className="self-start">{enviando ? "Guardando…" : "Guardar cambios"}</Boton>
-    </form>
+    </Formulario>
   );
 }
 
@@ -123,7 +124,7 @@ export function FormularioPersona({ centroId }: { centroId: string }) {
   const form = useLimpiarAlTerminar(estado);
 
   return (
-    <form ref={form} action={accion} className="flex flex-col gap-3">
+    <Formulario ref={form} action={accion} className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="nombre" placeholder="Nombre" aria-label="Nombre" required />
         <Input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="off" required />
@@ -136,7 +137,7 @@ export function FormularioPersona({ centroId }: { centroId: string }) {
       <MensajeError>{estado?.error}</MensajeError>
       <MensajeOk>{estado?.ok}</MensajeOk>
       <Boton type="submit" icono={UserRoundPlus} disabled={enviando} className="self-start">{enviando ? "Creando…" : "Sumar al equipo"}</Boton>
-    </form>
+    </Formulario>
   );
 }
 
@@ -156,7 +157,7 @@ export function FormularioCobro({
   const form = useLimpiarAlTerminar(estado);
 
   return (
-    <form ref={form} action={accion} className="flex flex-col gap-4">
+    <Formulario ref={form} action={accion} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {centroFijo ? (
           <input type="hidden" name="centro_id" value={centroFijo} />
@@ -202,6 +203,6 @@ export function FormularioCobro({
       <MensajeError>{estado?.error}</MensajeError>
       <MensajeOk>{estado?.ok}</MensajeOk>
       <Boton type="submit" icono={Save} disabled={enviando} className="self-start">{enviando ? "Guardando…" : "Registrar cobro"}</Boton>
-    </form>
+    </Formulario>
   );
 }

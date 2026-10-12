@@ -6,12 +6,13 @@ import { Boton, Campo, Input, MensajeError, Tarjeta } from "@/components/ui";
 import { CamposFicha } from "@/components/campos-ficha";
 import { CampoSexo } from "@/components/campo-sexo";
 import { crearCliente } from "../../acciones";
+import { Formulario } from "@/components/formulario";
 
 export function FormularioCliente({ dni, nombre, telefono, turnoId }: { dni?: string; nombre?: string; telefono?: string; turnoId?: string }) {
   const [estado, accion, enviando] = useActionState(crearCliente, undefined);
 
   return (
-    <form action={accion} className="flex flex-col gap-6">
+    <Formulario action={accion} className="flex flex-col gap-6">
       {turnoId && <input type="hidden" name="turno_id" value={turnoId} />}
       <Tarjeta titulo="1. Datos personales" icono={IdCard}>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -49,6 +50,6 @@ export function FormularioCliente({ dni, nombre, telefono, turnoId }: { dni?: st
           {enviando ? "Guardando…" : "Guardar cliente y ficha"}
         </Boton>
       </div>
-    </form>
+    </Formulario>
   );
 }

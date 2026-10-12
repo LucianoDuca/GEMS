@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { KeyRound } from "lucide-react";
 import type { EstadoFormulario } from "@/lib/tipos";
+import { Formulario } from "@/components/formulario";
 
 // Le pone una contraseña nueva a otra persona (la dueña a su equipo, GEMS a cualquiera).
 export function FormularioClave({
@@ -22,7 +23,7 @@ export function FormularioClave({
         <KeyRound className="size-3.5" aria-hidden />
         Nueva contraseña
       </summary>
-      <form action={despachar} className="mt-2 flex flex-col gap-2 sm:flex-row">
+      <Formulario action={despachar} className="mt-2 flex flex-col gap-2 sm:flex-row">
         <input type="hidden" name="usuario_id" value={usuarioId} />
         <input
           name="password"
@@ -37,7 +38,7 @@ export function FormularioClave({
         <button type="submit" disabled={enviando} className="shrink-0 rounded-xl bg-lila px-4 py-2 text-sm font-semibold text-white hover:bg-lila-oscuro disabled:opacity-50">
           {enviando ? "Guardando…" : "Cambiar"}
         </button>
-      </form>
+      </Formulario>
       {estado?.error && <p role="alert" className="mt-2 text-xs text-alerta">{estado.error}</p>}
       {estado?.ok && <p role="status" className="mt-2 text-xs font-medium text-celeste">{estado.ok}</p>}
     </details>

@@ -8,6 +8,7 @@ import { buscarClientes } from "@/app/(app)/acciones";
 import { DURACION_SUGERIDA, DURACIONES, horariosDelDia } from "@/lib/agenda";
 import { CATEGORIAS, type Categoria } from "@/lib/tipos";
 import { guardarTurno } from "./acciones";
+import { Formulario } from "@/components/formulario";
 
 export type ValoresTurno = {
   dia: string;
@@ -37,6 +38,13 @@ export function FormularioTurno({
   const [duracion, setDuracion] = useState(valores.duracion);
   const [cliente, setCliente] = useState(valores.cliente);
   const [personaNueva, setPersonaNueva] = useState(!valores.cliente && Boolean(valores.nombreProvisorio));
+  // Campos controlados: React vacía el formulario después de cada envío y, si hubo error, se perderían.
+  const [dia, setDia] = useState(valores.dia);
+  const [hora, setHora] = useState(valores.hora);
+  const [operadoraId, setOperadoraId] = useState(valores.operadoraId);
+  const [notas, setNotas] = useState(valores.notas);
+  const [nombreProvisorio, setNombreProvisorio] = useState(valores.nombreProvisorio);
+  const [telefonoProvisorio, setTelefonoProvisorio] = useState(valores.telefonoProvisorio);
   const [busqueda, setBusqueda] = useState("");
   const [resultados, setResultados] = useState<Awaited<ReturnType<typeof buscarClientes>>>([]);
   const [buscando, startTransition] = useTransition();
@@ -51,7 +59,7 @@ export function FormularioTurno({
   if (!horarios.includes(valores.hora)) horarios.unshift(valores.hora);
 
   return (
-    <form action={accion} className="flex flex-col gap-5">
+    <Formulario action={accion} className="flex flex-col gap-5">
       {/* ¿Para quién? */}
       <div className="flex flex-col gap-2">
         <span className="text-sm font-semibold">¿Para quién?</span>
@@ -70,8 +78,8 @@ export function FormularioTurno({
                 <X className="size-4" aria-hidden />
               </button>
             </div>
-            <Input name="nombre_provisorio" defaultValue={valores.nombreProvisorio} placeholder="Nombre y apellido" required />
-            <Input name="telefono_provisorio" defaultValue={valores.telefonoProvisorio} type="tel" placeholder="Teléfono (para el recordatorio)" />
+            <Input name="nombre_provisorio" value={nombreProvisorio} onChange={(e) => setNombreProvisorio(e.target.value)} placeholder="Nombre y apellido" required />
+            <Input name="telefono_provisorio" value={telefonoProvisorio} onChange={(e) => setTelefonoProvisorio(e.target.value)} type="tel" placeholder="Teléfono (para el recordatorio)" />
             <p className="text-xs text-suave">Cuando venga, le das el alta con su ficha desde el turno.</p>
           </div>
         ) : (
@@ -129,10 +137,10 @@ export function FormularioTurno({
       {/* ¿Cuándo? */}
       <div className="grid grid-cols-2 gap-3">
         <Campo etiqueta="Día">
-          <Input name="dia" type="date" defaultValue={valores.dia} required />
+          <Input name="dia" type="date" value={dia} onChange={(e) => setDia(e.target.value)} required />
         </Campo>
         <Campo etiqueta="Hora">
-          <Select name="hora" defaultValue={valores.hora} required>
+          <Select name="hora" value={hora} onChange={(e) => setHora(e.target.value)} required>
             {horarios.map((h) => <option key={h}>{h}</option>)}
           </Select>
         </Campo>
@@ -142,7 +150,7 @@ export function FormularioTurno({
           </Select>
         </Campo>
         <Campo etiqueta="Operadora">
-          <Select name="operadora_id" defaultValue={valores.operadoraId}>
+          <Select name="operadora_id" value={operadoraId} onChange={(e) => setOperadoraId(e.target.value)}>
             <option value="">Sin asignar</option>
             {operadoras.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
           </Select>
@@ -150,13 +158,13 @@ export function FormularioTurno({
       </div>
 
       <Campo etiqueta="Notas (opcional)">
-        <Textarea name="notas" defaultValue={valores.notas} rows={2} placeholder="Ej.: viene con su hermana, prefiere cabina 2…" />
+        <Textarea name="notas" value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} placeholder="Ej.: viene con su hermana, prefiere cabina 2…" />
       </Campo>
 
       <MensajeError>{estado?.error}</MensajeError>
       <Boton type="submit" tamano="grande" icono={CalendarCheck} disabled={enviando} className="w-full">
         {enviando ? "Guardando…" : turnoId ? "Guardar cambios" : "Agendar turno"}
       </Boton>
-    </form>
+    </Formulario>
   );
 }

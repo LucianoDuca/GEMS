@@ -7,12 +7,13 @@ import { CampoSexo } from "@/components/campo-sexo";
 import { Boton, Campo, Input, MensajeError, Tarjeta } from "@/components/ui";
 import type { Cliente } from "@/lib/tipos";
 import { actualizarCliente } from "../../../acciones";
+import { Formulario } from "@/components/formulario";
 
 export function FormularioEditarCliente({ cliente }: { cliente: Cliente }) {
   const [estado, accion, enviando] = useActionState(actualizarCliente.bind(null, cliente.id), undefined);
 
   return (
-    <form action={accion} className="flex flex-col gap-6">
+    <Formulario action={accion} className="flex flex-col gap-6">
       <Tarjeta titulo="Datos personales" icono={IdCard}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo etiqueta="DNI" ayuda="Solo números, sin puntos">
@@ -45,6 +46,6 @@ export function FormularioEditarCliente({ cliente }: { cliente: Cliente }) {
       <div className="flex justify-end">
         <Boton type="submit" tamano="grande" icono={Save} disabled={enviando}>{enviando ? "Guardando…" : "Guardar cambios"}</Boton>
       </div>
-    </form>
+    </Formulario>
   );
 }

@@ -4,12 +4,13 @@ import { useActionState } from "react";
 import { LogIn } from "lucide-react";
 import { Boton, Campo, Input, MensajeError } from "@/components/ui";
 import { ingresar } from "./acciones";
+import { Formulario } from "@/components/formulario";
 
 export function FormularioLogin() {
   const [estado, accion, enviando] = useActionState(ingresar, undefined);
 
   return (
-    <form action={accion} className="flex flex-col gap-5">
+    <Formulario action={accion} className="flex flex-col gap-5">
       <Campo etiqueta="Email">
         <Input name="email" type="email" autoComplete="email" placeholder="tu@email.com" required />
       </Campo>
@@ -20,6 +21,6 @@ export function FormularioLogin() {
       <Boton type="submit" disabled={enviando} tamano="grande" icono={LogIn} className="mt-2 w-full">
         {enviando ? "Ingresando…" : "Ingresar"}
       </Boton>
-    </form>
+    </Formulario>
   );
 }

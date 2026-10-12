@@ -7,6 +7,7 @@ import { MapaCuerpo, zonaPorRegion, type Sexo } from "@/components/mapa-cuerpo";
 import { ESTILO_CATEGORIA } from "@/components/categoria";
 import { CATEGORIAS, MEDIOS_PAGO, type Categoria } from "@/lib/tipos";
 import { registrarSesion } from "../../../acciones";
+import { Formulario } from "@/components/formulario";
 
 type Opcion = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria };
 export type UltimaSesion = { categoria: Categoria; fecha: string; tratamientos: string[]; zonas: string[]; potencia: string | null };
@@ -85,7 +86,7 @@ export function FormularioSesion({
   const puedeGuardar = alertasRevisadas && tratElegidos.size > 0;
 
   return (
-    <form action={accion} className="flex flex-col gap-6">
+    <Formulario action={accion} className="flex flex-col gap-6">
       {turnoId && <input type="hidden" name="turno_id" value={turnoId} />}
       {/* Progreso */}
       <div className="sticky top-16 z-10 -mx-1 rounded-2xl bg-white/90 px-4 py-3 shadow-sm ring-1 ring-borde/70 backdrop-blur lg:top-4">
@@ -248,7 +249,7 @@ export function FormularioSesion({
           {enviando ? "Guardando…" : monto.trim() ? "Guardar sesión y cobro" : "Guardar sesión"}
         </Boton>
       </div>
-    </form>
+    </Formulario>
   );
 }
 
