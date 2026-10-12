@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import { CATEGORIAS, type Categoria, type Rol } from "@/lib/tipos";
-import { Tarjeta, Vacio } from "@/components/ui";
+import { BotonLink, Tarjeta, Vacio } from "@/components/ui";
 import { cambiarEstadoItem, cambiarEstadoMiembro, editarItem } from "./acciones";
 import { FormularioItem, FormularioMiembro } from "./formularios";
 
@@ -20,7 +20,10 @@ export default async function Ajustes() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Ajustes del centro</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold">Ajustes del centro</h1>
+        <BotonLink href="/ajustes/importar" variante="secundario">Importar planillas</BotonLink>
+      </div>
 
       <Tarjeta titulo="Equipo">
         <ul className="mb-6 divide-y divide-borde">

@@ -30,6 +30,7 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
 | `src/proxy.ts` | Refresca la sesión y manda al login a quien no está autenticado |
 | `src/lib/contexto.ts` | Quién es el usuario y de qué centro; toda página pasa por acá |
 | `src/lib/ficha-salud.ts` | El cuestionario de salud y qué respuestas generan alertas |
+| `src/lib/importador.ts` | Lee las planillas de Google Forms (por encabezado, no por posición) y valida lo que llega al servidor |
 | `src/app/(app)` | Pantallas: buscar, cliente, nueva sesión, ficha, caja, ajustes (dueña), mi cuenta |
 | `src/app/(app)/acciones.ts` | Server actions (todas las escrituras) |
 
@@ -44,4 +45,3 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
 
 - Confirmar con el centro los nombres de las zonas de depilación marcadas con (?) en el seed (PC, LAT, CC, TC, LA, BRB).
 - Las preguntas de "condiciones" y "afecciones de la piel" eran de opción múltiple en el Form original; acá quedaron como Sí/No + detalle hasta tener la lista de opciones.
-- Importador de las planillas actuales del cliente.

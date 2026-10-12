@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import { edad, fecha, fechaHora, pesos } from "@/lib/formato";
@@ -153,6 +154,12 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
       </Tarjeta>
 
       <Tarjeta titulo="Ficha de salud" accion={ficha && <span className="text-sm text-suave">Versión {ficha.version} · firmada {fecha(ficha.firmada_en)}</span>}>
+        {ficha?.respuestas._importada && (
+          <p className="mb-4 rounded-xl bg-lila-claro px-4 py-3 text-sm">
+            Ficha importada de la planilla: no incluye la autorización de uso de datos.{" "}
+            <Link href={`/clientes/${id}/ficha`} className="font-semibold text-lila hover:underline">Actualizala</Link> en la próxima visita para que la firme.
+          </p>
+        )}
         {!ficha ? (
           <Vacio>Sin ficha cargada.</Vacio>
         ) : (

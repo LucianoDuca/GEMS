@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  experimental: {
+    // El importador manda el historial completo de las planillas en una sola acción.
+    serverActions: { bodySizeLimit: "10mb" },
+  },
   images: {
     qualities: [75, 90],
   },
