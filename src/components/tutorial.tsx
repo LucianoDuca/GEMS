@@ -20,11 +20,13 @@ const PASOS: Paso[] = [
   { objetivo: "contactar", titulo: "A quién escribirle", texto: "GEMS te avisa a quién le toca volver, quién cumple años y qué turnos de mañana conviene recordar. Un toque y se abre WhatsApp con el mensaje escrito." },
   { objetivo: "nav-clientes", titulo: "La ficha de cada cliente", texto: "Historial de sesiones, totales por tratamiento y fotos antes y después. Al registrar una sesión marcás las zonas tocando el cuerpo." },
   { objetivo: "nav-caja", titulo: "Caja del día", texto: "Cobros y gastos. Si algo se cargó mal, se anula con un motivo: nunca se borra." },
-  { objetivo: "nav-ajustes", soloDuena: true, titulo: "Ajustes del centro", texto: "Tu equipo, los tratamientos y las zonas. También podés traer las planillas que usaban antes." },
+  { objetivo: "nav-ajustes", soloDuena: true, titulo: "Ajustes del centro", texto: "Tu equipo, los tratamientos y las zonas. También podés traer las planillas que usaban antes. En el celular está dentro de «Cuenta»." },
   { objetivo: "tutorial", titulo: "¡Listo!", texto: "Si te olvidás de algo, tocá «Tutorial» y lo vemos de nuevo." },
 ];
 
 const CLAVE = "gems-tutorial";
+// Lugar que necesita la explicación al lado de lo marcado.
+const ESPACIO = 250;
 const EVENTO = "gems:tutorial";
 
 // Preferencia guardada en este dispositivo ("visto" o "rechazado"). Si el
@@ -106,8 +108,11 @@ export function Tutorial({ rol }: { rol: "duena" | "operadora" }) {
       const el = buscarObjetivo(objetivo);
       if (el) {
         const r = el.getBoundingClientRect();
-        const fixedNav = el.closest("nav, aside, header");
-        if (!fixedNav && (r.top < 80 || r.bottom > window.innerHeight - 100)) el.scrollIntoView({ block: "center", behavior: "smooth" });
+        // Si no entra la explicación al lado de lo marcado, se desplaza la página
+        // para dejarlo arriba y la explicación justo debajo.
+        const alto = window.innerHeight;
+        const entra = r.top >= 72 && r.bottom <= alto - 90 && (alto - r.bottom >= ESPACIO || r.top >= ESPACIO);
+        if (!el.closest("nav, aside, header") && !entra) window.scrollBy({ top: r.top - 80, behavior: "smooth" });
         medir();
         // Vuelve a medir mientras dura el desplazamiento suave.
         setTimeout(medir, 400);
@@ -189,8 +194,8 @@ export function Tutorial({ rol }: { rol: "duena" | "operadora" }) {
     posicion = { left: (ancho - anchoTarjeta) / 2, top: Math.max(M, alto / 2 - 130) };
   } else {
     const left = Math.min(Math.max(rect.left + rect.width / 2 - anchoTarjeta / 2, M), ancho - anchoTarjeta - M);
-    if (alto - rect.bottom >= 250) posicion = { left, top: rect.bottom + 14 };
-    else if (rect.top >= 250) posicion = { left, bottom: alto - rect.top + 14 };
+    if (alto - rect.bottom >= ESPACIO) posicion = { left, top: rect.bottom + 14 };
+    else if (rect.top >= ESPACIO) posicion = { left, bottom: alto - rect.top + 14 };
     else posicion = { left: (ancho - anchoTarjeta) / 2, bottom: M };
   }
 

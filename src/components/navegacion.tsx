@@ -109,7 +109,7 @@ export function Navegacion({
         {esAdmin && (
           <Link href="/admin" aria-label="Panel GEMS" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-lila-claro px-2.5 py-2 text-xs font-bold text-lila">
             <Gem className="size-4" aria-hidden />
-            GEMS
+            <span className="hidden sm:inline">GEMS</span>
           </Link>
         )}
         <form action={salir} className="shrink-0">
