@@ -61,30 +61,28 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
       </Link>
 
       {/* Cabecera del cliente */}
-      <section className="overflow-hidden rounded-[2rem] border border-borde/70 bg-white shadow-sm">
-        <div className="h-20 bg-gradient-to-r from-lila via-lila-oscuro to-celeste" />
-        <div className="-mt-10 flex flex-col gap-5 px-5 pb-6 sm:px-7 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex items-end gap-4">
-            <span className="rounded-full ring-4 ring-white">
-              <Avatar nombre={cliente.nombre_completo} tamano="grande" />
-            </span>
-            <div className="pb-1">
+      <section className="overflow-hidden rounded-[2rem] shadow-xl shadow-lila/20">
+        <div className="relative flex flex-col gap-6 overflow-hidden bg-gradient-to-br from-lila via-lila to-lila-oscuro px-5 py-6 text-white sm:px-7 lg:flex-row lg:items-center lg:justify-between">
+          <div aria-hidden className="absolute -right-16 -top-20 size-64 rounded-full bg-celeste/30 blur-3xl" />
+          <div className="relative flex items-center gap-4">
+            <Avatar nombre={cliente.nombre_completo} tamano="grande" sobreColor />
+            <div>
               <h1 className="text-2xl font-bold tracking-tight">{cliente.nombre_completo}</h1>
-              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-suave">
+              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85">
                 <span className="inline-flex items-center gap-1.5"><IdCard className="size-4" aria-hidden />DNI {cliente.dni}</span>
                 {cliente.fecha_nacimiento && <span className="inline-flex items-center gap-1.5"><Cake className="size-4" aria-hidden />{edad(cliente.fecha_nacimiento)} años</span>}
-                {cliente.telefono && <a href={`tel:${cliente.telefono}`} className="inline-flex items-center gap-1.5 hover:text-lila"><Phone className="size-4" aria-hidden />{cliente.telefono}</a>}
+                {cliente.telefono && <a href={`tel:${cliente.telefono}`} className="inline-flex items-center gap-1.5 hover:text-white"><Phone className="size-4" aria-hidden />{cliente.telefono}</a>}
                 {cliente.direccion && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" aria-hidden />{cliente.direccion}</span>}
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <BotonLink href={`/clientes/${id}/sesion`} tamano="grande" icono={CalendarPlus}>Registrar sesión</BotonLink>
-            <BotonLink href={`/clientes/${id}/ficha`} tamano="grande" variante="secundario" icono={ClipboardPlus}>Actualizar ficha</BotonLink>
+          <div className="relative flex flex-col gap-2 sm:flex-row">
+            <BotonLink href={`/clientes/${id}/sesion`} tamano="grande" icono={CalendarPlus} className="!bg-white !text-lila !shadow-lg hover:!bg-lila-claro">Registrar sesión</BotonLink>
+            <BotonLink href={`/clientes/${id}/ficha`} tamano="grande" variante="fantasma" icono={ClipboardPlus} className="border border-white/40 !text-white hover:!bg-white/15">Actualizar ficha</BotonLink>
           </div>
         </div>
         {ficha && ficha.alertas.length > 0 && (
-          <div className="border-t border-alerta/15 bg-alerta-claro/60 px-5 py-4 sm:px-7">
+          <div className="bg-alerta-claro px-5 py-4 sm:px-7">
             <p className="mb-2 text-xs font-bold uppercase tracking-wider text-alerta">Revisar antes de tratar</p>
             <div className="flex flex-wrap gap-2">
               {ficha.alertas.map((a) => (

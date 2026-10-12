@@ -167,14 +167,14 @@ export function Indicador({ etiqueta, valor, detalle, icono: Icono }: { etiqueta
   );
 }
 
-export function Avatar({ nombre, tamano = "normal" }: { nombre: string; tamano?: "normal" | "grande" }) {
+export function Avatar({ nombre, tamano = "normal", sobreColor = false }: { nombre: string; tamano?: "normal" | "grande"; sobreColor?: boolean }) {
   const iniciales = nombre.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-lila-claro to-celeste-claro font-bold text-lila ${
-        tamano === "grande" ? "size-16 text-xl" : "size-10 text-sm"
-      }`}
+      className={`grid shrink-0 place-items-center rounded-full font-bold ${
+        sobreColor ? "bg-white/20 text-white ring-2 ring-white/40" : "bg-gradient-to-br from-lila-claro to-celeste-claro text-lila"
+      } ${tamano === "grande" ? "size-16 text-xl" : "size-10 text-sm"}`}
     >
       {iniciales || "?"}
     </span>
