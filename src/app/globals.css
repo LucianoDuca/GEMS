@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Colores tomados del logo GEMS */
+@theme {
+  --color-lila: #a65287;
+  --color-lila-oscuro: #87406c;
+  --color-lila-claro: #f6eaf2;
+  --color-celeste: #0096da;
+  --color-celeste-claro: #e5f4fb;
+  --color-tinta: #1f1a24;
+  --color-suave: #6b6472;
+  --color-borde: #e7e2ea;
+  --color-fondo: #faf8fb;
+  --color-alerta: #c2410c;
+  --color-alerta-claro: #fff1e8;
+  --font-sans: var(--font-montserrat);
+}
+
+body {
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+}
