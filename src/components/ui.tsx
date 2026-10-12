@@ -6,7 +6,7 @@ import { ArrowLeft, TriangleAlert } from "lucide-react";
 // ───────── Botones ─────────
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 const tamanos = {
   normal: "px-4 py-2.5 text-sm",
