@@ -13,7 +13,7 @@ export async function ingresar(_: EstadoFormulario, formData: FormData): Promise
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "Email o contraseña incorrectos." };
 
-  redirect("/");
+  redirect("/?bienvenida=1");
 }
 
 export async function salir() {

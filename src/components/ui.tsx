@@ -69,20 +69,32 @@ export function Encabezado({
         </Link>
       )}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           {Icono && (
-            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-lila to-lila-oscuro text-white shadow-md shadow-lila/25">
+            <span className="grid size-11 sm:size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-lila to-lila-oscuro text-white shadow-md shadow-lila/25">
               <Icono className="size-6" aria-hidden />
             </span>
           )}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{titulo}</h1>
+            <h1 className="text-[1.375rem] font-bold leading-tight tracking-tight sm:text-2xl">{titulo}</h1>
             {descripcion && <p className="mt-0.5 text-sm text-suave">{descripcion}</p>}
           </div>
         </div>
         {acciones && <div className="flex flex-wrap gap-2">{acciones}</div>}
       </div>
     </header>
+  );
+}
+
+// Barra fija abajo con el botón principal de un formulario largo. En el celular
+// ocupa todo el ancho, con fondo propio, justo arriba de la barra de navegación:
+// así no queda flotando encima del contenido.
+export function BarraAccion({ children, ayuda }: { children: ReactNode; ayuda?: ReactNode }) {
+  return (
+    <div className="sticky bottom-[var(--alto-nav)] z-10 -mx-4 flex flex-col gap-2 border-t border-borde/70 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:flex-row sm:items-center sm:justify-end sm:px-6 lg:bottom-4 lg:mx-0 lg:rounded-2xl lg:border lg:px-4 lg:shadow-lg lg:shadow-tinta/5">
+      {ayuda && <p className="text-center text-xs font-semibold text-suave sm:mr-auto sm:text-left">{ayuda}</p>}
+      {children}
+    </div>
   );
 }
 
@@ -156,12 +168,12 @@ export function Accion({
 
 export function Indicador({ etiqueta, valor, detalle, icono: Icono }: { etiqueta: string; valor: ReactNode; detalle?: ReactNode; icono?: LucideIcon }) {
   return (
-    <div className="rounded-3xl border border-borde/70 bg-white p-5 shadow-sm shadow-tinta/[0.03]">
-      <div className="flex items-center gap-2 text-sm text-suave">
-        {Icono && <Icono className="size-4 text-lila" aria-hidden />}
+    <div className="rounded-3xl border border-borde/70 bg-white p-4 shadow-sm shadow-tinta/[0.03] sm:p-5">
+      <div className="flex items-start gap-1.5 text-xs leading-tight text-suave sm:items-center sm:gap-2 sm:text-sm">
+        {Icono && <Icono className="size-4 shrink-0 text-lila" aria-hidden />}
         {etiqueta}
       </div>
-      <div className="mt-2 text-3xl font-bold tracking-tight">{valor}</div>
+      <div className="mt-2 break-words text-xl font-bold tracking-tight sm:text-3xl">{valor}</div>
       {detalle && <div className="mt-1 text-xs text-suave">{detalle}</div>}
     </div>
   );

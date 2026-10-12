@@ -25,7 +25,31 @@ export default async function Esteticas() {
         {!centros?.length ? (
           <Vacio icono={Building2}>Todavía no hay estéticas.</Vacio>
         ) : (
-          <div className="-mx-2 overflow-x-auto">
+          <>
+          {/* Celular: una tarjeta por estética */}
+          <ul className="-mx-2 flex flex-col md:hidden">
+            {centros.map((c) => {
+              const e = estadoCentro(c.estado);
+              const u = usoPorCentro.get(c.id);
+              return (
+                <li key={c.id} className="border-t border-borde/70 first:border-t-0">
+                  <Link href={`/admin/esteticas/${c.id}`} className="flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-fondo">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold">{c.nombre}</span>
+                        <Etiqueta tono={e.tono}>{e.etiqueta}</Etiqueta>
+                      </div>
+                      <div className="mt-1 text-xs text-suave">
+                        {c.plan} · {pesos(Number(c.precio_mensual))} · {u?.clientes ?? 0} clientes · {u?.sesiones_mes ?? 0} sesiones este mes
+                      </div>
+                    </div>
+                    <ChevronRight className="size-5 shrink-0 text-suave" aria-hidden />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="-mx-2 hidden overflow-x-auto md:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="text-left text-xs uppercase tracking-wider text-suave">
                 <tr>
@@ -64,6 +88,7 @@ export default async function Esteticas() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Tarjeta>
     </>

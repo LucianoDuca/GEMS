@@ -60,7 +60,7 @@ export function BuscadorClientes({ grande = false, valorInicial = "", autoFocus 
               if (e.target.value.trim().length < 2) setResultados(null);
             }}
             onKeyDown={teclas}
-            placeholder={grande ? "Escribí un DNI o un nombre…" : "DNI o nombre"}
+            placeholder={grande ? "DNI o nombre…" : "DNI o nombre"}
             inputMode="search"
             autoComplete="off"
             autoFocus={autoFocus}

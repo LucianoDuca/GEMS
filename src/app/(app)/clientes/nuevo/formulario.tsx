@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { HeartPulse, IdCard, Save } from "lucide-react";
-import { Boton, Campo, Input, MensajeError, Tarjeta } from "@/components/ui";
+import { BarraAccion, Boton, Campo, Input, MensajeError, Tarjeta } from "@/components/ui";
 import { CamposFicha } from "@/components/campos-ficha";
 import { CampoSexo } from "@/components/campo-sexo";
 import { crearCliente } from "../../acciones";
@@ -45,11 +45,11 @@ export function FormularioCliente({ dni, nombre, telefono, turnoId }: { dni?: st
       </Tarjeta>
 
       <MensajeError>{estado?.error}</MensajeError>
-      <div className="sticky bottom-24 z-10 flex justify-end lg:bottom-6">
-        <Boton type="submit" disabled={enviando} tamano="grande" icono={Save} className="w-full shadow-xl sm:w-auto">
+      <BarraAccion>
+        <Boton type="submit" disabled={enviando} tamano="grande" icono={Save} className="w-full sm:w-auto">
           {enviando ? "Guardando…" : "Guardar cliente y ficha"}
         </Boton>
-      </div>
+      </BarraAccion>
     </Formulario>
   );
 }

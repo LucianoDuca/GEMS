@@ -58,7 +58,7 @@ export function NavegacionAdmin({ nombre, tieneCentro, salir }: { nombre: string
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center gap-3 bg-tinta px-4 py-3 text-white lg:hidden">
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 bg-tinta px-4 text-white lg:hidden">
         <Image src="/gems-diamante-blanco.png" alt="" width={512} height={512} className="size-7" />
         <span className="font-bold">Panel GEMS</span>
         <form action={salir} className="ml-auto">
@@ -67,11 +67,11 @@ export function NavegacionAdmin({ nombre, tieneCentro, salir }: { nombre: string
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-tinta pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div className="mx-auto flex max-w-lg">
+        <div className="mx-auto flex h-[4.5rem] max-w-lg items-stretch">
           {[...ITEMS, ...(tieneCentro ? [{ href: "/", texto: "Mi centro", icono: ArrowLeftRight }] : [])].map(({ href, texto, icono: Icono }) => {
             const esActivo = href !== "/" && activo(pathname, href);
             return (
-              <Link key={href} href={href} className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold">
+              <Link key={href} href={href} className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold">
                 <span className={`grid h-8 w-14 place-items-center rounded-full ${esActivo ? "bg-lila text-white" : "text-white/60"}`}>
                   <Icono className="size-5" aria-hidden />
                 </span>

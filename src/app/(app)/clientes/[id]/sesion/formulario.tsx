@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Banknote, Check, History, Layers, MapPinned, NotebookPen, RotateCcw, Save, ShieldAlert, Sparkles } from "lucide-react";
-import { Boton, Campo, Input, MensajeError, Select, Tarjeta, Textarea } from "@/components/ui";
+import { BarraAccion, Boton, Campo, Input, MensajeError, Select, Tarjeta, Textarea } from "@/components/ui";
 import { MapaCuerpo, zonaPorRegion, type Sexo } from "@/components/mapa-cuerpo";
 import { ESTILO_CATEGORIA } from "@/components/categoria";
 import { CATEGORIAS, MEDIOS_PAGO, type Categoria } from "@/lib/tipos";
@@ -89,7 +89,7 @@ export function FormularioSesion({
     <Formulario action={accion} className="flex flex-col gap-6">
       {turnoId && <input type="hidden" name="turno_id" value={turnoId} />}
       {/* Progreso */}
-      <div className="sticky top-16 z-10 -mx-1 rounded-2xl bg-white/90 px-4 py-3 shadow-sm ring-1 ring-borde/70 backdrop-blur lg:top-4">
+      <div className="sticky top-[4rem] z-10 -mx-1 rounded-2xl bg-white/90 px-4 py-3 shadow-sm ring-1 ring-borde/70 backdrop-blur lg:top-4">
         <div className="mb-2 flex items-center justify-between text-xs font-semibold text-suave">
           <span>Paso {Math.min(completos + 1, pasos.length)} de {pasos.length}</span>
           <span>{completos === pasos.length ? "¡Todo listo!" : "Completá lo que falta"}</span>
@@ -239,16 +239,11 @@ export function FormularioSesion({
       </Tarjeta>
 
       <MensajeError>{estado?.error}</MensajeError>
-      <div className="sticky bottom-24 z-10 flex flex-col items-end gap-2 lg:bottom-6">
-        {!puedeGuardar && (
-          <p className="rounded-xl bg-white/95 px-3 py-1.5 text-xs font-semibold text-suave shadow-sm">
-            {!alertasRevisadas ? "Primero confirmá que revisaste las alertas" : "Elegí al menos un tratamiento"}
-          </p>
-        )}
-        <Boton type="submit" disabled={enviando || !puedeGuardar} tamano="grande" icono={Save} className="w-full shadow-xl sm:w-auto">
+      <BarraAccion ayuda={!puedeGuardar && (!alertasRevisadas ? "Primero confirmá que revisaste las alertas" : "Elegí al menos un tratamiento")}>
+        <Boton type="submit" disabled={enviando || !puedeGuardar} tamano="grande" icono={Save} className="w-full sm:w-auto">
           {enviando ? "Guardando…" : monto.trim() ? "Guardar sesión y cobro" : "Guardar sesión"}
         </Boton>
-      </div>
+      </BarraAccion>
     </Formulario>
   );
 }

@@ -11,6 +11,7 @@ import { etiquetaCategoria, type Categoria } from "@/lib/tipos";
 import { BotonLink, Encabezado, Vacio } from "@/components/ui";
 import { ESTILO_CATEGORIA, EtiquetaCategoria } from "@/components/categoria";
 import { BotonRecordatorio } from "@/components/boton-recordatorio";
+import { SaltarADia } from "./saltar-dia";
 import { FormularioTurno, type ValoresTurno } from "./formulario-turno";
 import { cambiarEstadoTurno } from "./acciones";
 
@@ -123,24 +124,24 @@ export default async function Agenda({ searchParams }: PageProps<"/agenda">) {
       />
 
       {/* Barra de navegación */}
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-2xl bg-white p-1 shadow-sm ring-1 ring-borde/70">
-          <Link href={`/agenda?${new URLSearchParams({ dia: anterior, ...(vista === "semana" ? { vista } : {}) })}`} className="grid size-10 place-items-center rounded-xl hover:bg-fondo" aria-label="Anterior"><ChevronLeft className="size-5" aria-hidden /></Link>
-          <Link href={`/agenda?${new URLSearchParams({ dia: hoy, ...(vista === "semana" ? { vista } : {}) })}`} className="rounded-xl px-3 py-2 text-sm font-semibold hover:bg-fondo">Hoy</Link>
-          <Link href={`/agenda?${new URLSearchParams({ dia: siguiente, ...(vista === "semana" ? { vista } : {}) })}`} className="grid size-10 place-items-center rounded-xl hover:bg-fondo" aria-label="Siguiente"><ChevronRight className="size-5" aria-hidden /></Link>
+      <div className="mb-5 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex shrink-0 items-center rounded-2xl bg-white p-1 shadow-sm ring-1 ring-borde/70">
+            <Link href={`/agenda?${new URLSearchParams({ dia: anterior, ...(vista === "semana" ? { vista } : {}) })}`} className="grid size-10 place-items-center rounded-xl hover:bg-fondo" aria-label="Anterior"><ChevronLeft className="size-5" aria-hidden /></Link>
+            <Link href={`/agenda?${new URLSearchParams({ dia: hoy, ...(vista === "semana" ? { vista } : {}) })}`} className="rounded-xl px-3 py-2 text-sm font-semibold hover:bg-fondo">Hoy</Link>
+            <Link href={`/agenda?${new URLSearchParams({ dia: siguiente, ...(vista === "semana" ? { vista } : {}) })}`} className="grid size-10 place-items-center rounded-xl hover:bg-fondo" aria-label="Siguiente"><ChevronRight className="size-5" aria-hidden /></Link>
+          </div>
+          <span className="min-w-0 truncate text-lg font-bold first-letter:uppercase">{titulo}</span>
         </div>
-        <span className="text-lg font-bold first-letter:uppercase">{titulo}</span>
-        <form action="/agenda" className="ml-auto flex items-center gap-2">
-          {vista === "semana" && <input type="hidden" name="vista" value="semana" />}
-          <input type="date" name="dia" defaultValue={dia} aria-label="Ir a un día" className="rounded-xl border border-borde bg-white px-3 py-2 text-sm" />
-          <button className="rounded-xl border border-borde bg-white px-3 py-2 text-sm font-semibold hover:border-lila hover:text-lila">Ir</button>
-        </form>
-        <div className="flex rounded-2xl bg-white p-1 shadow-sm ring-1 ring-borde/70">
-          {(["dia", "semana"] as const).map((v) => (
-            <Link key={v} href={`/agenda?${new URLSearchParams({ dia, ...(v === "semana" ? { vista: v } : {}) })}`} className={`rounded-xl px-4 py-2 text-sm font-semibold ${vista === v ? "bg-lila text-white shadow" : "text-suave hover:text-lila"}`}>
-              {v === "dia" ? "Día" : "Semana"}
-            </Link>
-          ))}
+        <div className="flex items-center gap-2 md:ml-auto">
+          <SaltarADia key={dia} dia={dia} vista={vista} />
+          <div className="ml-auto flex rounded-2xl bg-white p-1 shadow-sm ring-1 ring-borde/70">
+            {(["dia", "semana"] as const).map((v) => (
+              <Link key={v} href={`/agenda?${new URLSearchParams({ dia, ...(v === "semana" ? { vista: v } : {}) })}`} className={`rounded-xl px-4 py-2 text-sm font-semibold ${vista === v ? "bg-lila text-white shadow" : "text-suave hover:text-lila"}`}>
+                {v === "dia" ? "Día" : "Semana"}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -215,16 +216,16 @@ function FilaTurno({ turno: t, href, operadora }: { turno: Turno; href: string; 
   return (
     <li>
       <Link href={href} scroll={false} className={`flex items-center gap-3 rounded-2xl border border-borde/70 p-3 hover:border-lila ${t.estado === "ausente" ? "opacity-60" : ""}`}>
-        <div className="w-14 shrink-0 text-center">
+        <div className="w-12 shrink-0 text-center">
           <div className="text-base font-bold tabular-nums">{horaDe(t.inicio)}</div>
           <div className="text-[11px] text-suave">{duracionMinutos(t.inicio, t.fin)} min</div>
         </div>
         <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${chip}`}><Icono className="size-5" aria-hidden /></span>
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold">{nombreTurno(t)}</div>
+          <div className="line-clamp-2 font-semibold leading-snug">{nombreTurno(t)}</div>
           <div className="truncate text-xs text-suave">{etiquetaCategoria(t.categoria)}{operadora ? ` · ${operadora}` : ""}</div>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ESTADOS_TURNO[t.estado].chip}`}>{ESTADOS_TURNO[t.estado].texto}</span>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${ESTADOS_TURNO[t.estado].chip}`}>{ESTADOS_TURNO[t.estado].texto}</span>
       </Link>
     </li>
   );

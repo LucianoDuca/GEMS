@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Boton, MensajeError, Tarjeta } from "@/components/ui";
+import { BarraAccion, Boton, MensajeError, Tarjeta } from "@/components/ui";
 import { CamposFicha } from "@/components/campos-ficha";
 import type { Respuestas } from "@/lib/ficha-salud";
 import { actualizarFicha } from "../../../acciones";
@@ -16,9 +16,11 @@ export function FormularioFicha({ clienteId, previa }: { clienteId: string; prev
         <CamposFicha previa={previa} />
       </Tarjeta>
       <MensajeError>{estado?.error}</MensajeError>
-      <Boton type="submit" disabled={enviando} className="self-end">
-        {enviando ? "Guardando…" : "Guardar nueva versión"}
-      </Boton>
+      <BarraAccion>
+        <Boton type="submit" disabled={enviando} tamano="grande" className="w-full sm:w-auto">
+          {enviando ? "Guardando…" : "Guardar nueva versión"}
+        </Boton>
+      </BarraAccion>
     </Formulario>
   );
 }

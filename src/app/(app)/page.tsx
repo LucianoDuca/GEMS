@@ -9,6 +9,7 @@ import { EtiquetaCategoria } from "@/components/categoria";
 import { BuscadorClientes } from "@/components/buscador-clientes";
 import { ContactarHoy } from "@/components/contactar-hoy";
 import { TurnosHoy } from "@/components/turnos-hoy";
+import { Bienvenida } from "@/components/bienvenida";
 
 function saludo() {
   const horaAR = Number(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "numeric", hourCycle: "h23" }).format(new Date()));
@@ -17,8 +18,9 @@ function saludo() {
   return "Buenas noches";
 }
 
-export default async function Inicio() {
+export default async function Inicio({ searchParams }: PageProps<"/">) {
   const { supabase, nombre, rol, centroNombre } = await obtenerContexto();
+  const { bienvenida } = await searchParams;
   const hoy = hoyAR();
   const { inicio, fin } = rangoDia(hoy);
   const inicioMes = rangoDia(`${hoy.slice(0, 7)}-01`).inicio;
@@ -41,7 +43,8 @@ export default async function Inicio() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="relative z-20 rounded-[2rem] bg-gradient-to-br from-lila via-lila to-lila-oscuro p-6 text-white shadow-xl shadow-lila/20 sm:p-8">
+      {bienvenida && <Bienvenida nombre={nombre.split(" ")[0]} centro={centroNombre} />}
+      <section className="relative z-20 rounded-[2rem] bg-gradient-to-br from-lila via-lila to-lila-oscuro p-5 text-white shadow-xl shadow-lila/20 sm:p-8">
         {/* La decoración se recorta en su propia capa, así el buscador puede desplegar resultados por fuera. */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]">
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-celeste/30 blur-3xl" />
@@ -49,32 +52,38 @@ export default async function Inicio() {
         </div>
         <div className="relative">
           <p className="text-sm font-medium text-white/80 first-letter:uppercase">{fechaLarga}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{saludo()}, {primerNombre}</h1>
+          <h1 className="mt-1 text-[1.75rem] font-bold leading-tight tracking-tight sm:text-4xl">{saludo()}, {primerNombre}</h1>
           <p className="mt-1 text-white/85">¿A quién atendés ahora? Buscá por DNI o por nombre.</p>
-          <div className="mt-5">
+          <div className="mt-5" data-tour="buscador">
             <BuscadorClientes grande />
           </div>
         </div>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Accion href="/clientes/nuevo" icono={UserPlus} titulo="Alta de cliente" descripcion="Datos y ficha de salud" tono="celeste" />
+        <div data-tour="alta" className="grid">
+          <Accion href="/clientes/nuevo" icono={UserPlus} titulo="Alta de cliente" descripcion="Datos y ficha de salud" tono="celeste" />
+        </div>
         <Accion href="/caja" icono={Wallet} titulo="Caja de hoy" descripcion="Cobros y movimientos" tono="blanco" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <Indicador icono={CalendarCheck} etiqueta="Sesiones de hoy" valor={sesionesHoy.length} />
-        <Indicador icono={Wallet} etiqueta="Caja de hoy" valor={pesos(cajaHoy)} detalle={rol === "operadora" ? "Ingresos menos egresos" : undefined} />
-        <Indicador icono={Sparkles} etiqueta="Clientes nuevos del mes" valor={nuevosMes ?? 0} />
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+        <Indicador icono={CalendarCheck} etiqueta="Sesiones hoy" valor={sesionesHoy.length} />
+        <Indicador icono={Wallet} etiqueta="Caja hoy" valor={pesos(cajaHoy)} detalle={rol === "operadora" ? "Ingresos menos egresos" : undefined} />
+        <Indicador icono={Sparkles} etiqueta="Nuevos del mes" valor={nuevosMes ?? 0} />
       </div>
 
-      <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
-        <TurnosHoy supabase={supabase} hoy={hoy} />
-      </Suspense>
+      <div data-tour="turnos-hoy">
+        <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
+          <TurnosHoy supabase={supabase} hoy={hoy} />
+        </Suspense>
+      </div>
 
-      <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
-        <ContactarHoy supabase={supabase} centroNombre={centroNombre} hoy={hoy} />
-      </Suspense>
+      <div data-tour="contactar">
+        <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
+          <ContactarHoy supabase={supabase} centroNombre={centroNombre} hoy={hoy} />
+        </Suspense>
+      </div>
 
       <Tarjeta titulo="Lo que se atendió hoy" icono={CalendarCheck} accion={<Link href="/clientes" className="text-sm font-semibold text-lila hover:underline">Ver clientes</Link>}>
         {!deHoy?.length ? (

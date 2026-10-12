@@ -21,6 +21,11 @@ body {
   color: var(--color-tinta);
 }
 
+:root {
+  /* Alto de la barra de navegación inferior del celular (para lo que va fijo arriba de ella). */
+  --alto-nav: calc(4.5rem + 1px + env(safe-area-inset-bottom));
+}
+
 /* ───────── Animaciones suaves ───────── */
 @keyframes entrar-arriba {
   from { opacity: 0; transform: translateY(-12px) scale(0.98); }
@@ -44,6 +49,41 @@ body {
 .check-animado { stroke-dasharray: 24; animation: dibujar-check 0.45s 0.15s ease-out both; }
 .animar-latido { animation: latido 0.4s ease-out; }
 
+/* ───────── Bienvenida al iniciar sesión ───────── */
+.bienvenida { animation: bienvenida-salir 0.6s 2.4s cubic-bezier(0.7, 0, 0.3, 1) forwards; }
+.bienvenida-saltar { animation-delay: 0s; animation-duration: 0.3s; }
+@keyframes bienvenida-salir {
+  to { opacity: 0; transform: scale(1.04); visibility: hidden; }
+}
+.bienvenida-diamante { animation: diamante-entrar 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.25) both; }
+@keyframes diamante-entrar {
+  from { opacity: 0; transform: scale(0.35) rotate(-30deg); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+.bienvenida-brillo {
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.9) 48%, transparent 66%);
+  background-size: 250% 100%;
+  animation: brillo 1.1s 0.65s ease-in-out both;
+}
+@keyframes brillo {
+  from { background-position: 130% 0; }
+  to { background-position: -30% 0; }
+}
+.bienvenida-onda { opacity: 0; animation: onda 1.6s 0.5s ease-out; }
+@keyframes onda {
+  from { opacity: 0.9; transform: scale(1); }
+  to { opacity: 0; transform: scale(2.4); }
+}
+.bienvenida-texto { animation: aparecer 0.6s ease-out backwards; }
+
+/* ───────── Tutorial ───────── */
+.tutorial-foco { transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease; }
+.tutorial-tarjeta { transition: top 0.35s ease, bottom 0.35s ease, left 0.35s ease; }
+
 @media (prefers-reduced-motion: reduce) {
-  .animar-entrada, .animar-aparecer, .check-animado, .animar-latido { animation: none; }
+  .animar-entrada, .animar-aparecer, .check-animado, .animar-latido,
+  .bienvenida-diamante, .bienvenida-brillo, .bienvenida-onda, .bienvenida-texto { animation: none; }
+  .bienvenida { animation-delay: 1.2s; }
+  .tutorial-foco, .tutorial-tarjeta { transition: none; }
 }

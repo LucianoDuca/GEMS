@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Users, Wallet, Settings, CircleUserRound, Gem, LogOut, CalendarDays } from "lucide-react";
+import { House, Users, Wallet, Settings, CircleUserRound, Gem, LogOut, CalendarDays, CircleHelp } from "lucide-react";
+import { abrirTutorial } from "@/components/tutorial";
 import type { LucideIcon } from "lucide-react";
 
 type Item = { href: string; texto: string; icono: LucideIcon };
@@ -53,6 +54,7 @@ export function Navegacion({
             <Link
               key={href}
               href={href}
+              data-tour={`nav-${texto.toLowerCase()}`}
               aria-current={activo(pathname, href) ? "page" : undefined}
               className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition ${
                 activo(pathname, href) ? "bg-white text-lila shadow-lg shadow-black/10" : "text-white/90 hover:bg-white/10"
@@ -62,8 +64,12 @@ export function Navegacion({
               {texto}
             </Link>
           ))}
+          <button type="button" onClick={abrirTutorial} data-tour="tutorial" className="mt-4 flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-semibold text-white/90 hover:bg-white/10">
+            <CircleHelp className="size-5" aria-hidden />
+            Tutorial
+          </button>
           {esAdmin && (
-            <Link href="/admin" className="mt-4 flex items-center gap-3 rounded-2xl border border-white/25 px-4 py-3 text-[15px] font-semibold text-white/90 hover:bg-white/10">
+            <Link href="/admin" className="mt-1 flex items-center gap-3 rounded-2xl border border-white/25 px-4 py-3 text-[15px] font-semibold text-white/90 hover:bg-white/10">
               <Gem className="size-5" aria-hidden />
               Panel GEMS
             </Link>
@@ -91,29 +97,35 @@ export function Navegacion({
       </aside>
 
       {/* Celular: barra superior */}
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-borde/70 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5">
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-borde/70 bg-white/90 px-4 backdrop-blur lg:hidden">
+        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2.5">
           <Image src="/gems-diamante.png" alt="" width={512} height={512} className="size-8" />
           <span className="truncate font-bold">{centro}</span>
         </Link>
+        <button type="button" onClick={abrirTutorial} data-tour="tutorial" className="flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-bold text-suave hover:bg-fondo hover:text-lila">
+          <CircleHelp className="size-4" aria-hidden />
+          Tutorial
+        </button>
         {esAdmin && (
-          <Link href="/admin" className="ml-auto rounded-xl bg-lila-claro px-3 py-1.5 text-xs font-bold text-lila">Panel GEMS</Link>
+          <Link href="/admin" aria-label="Panel GEMS" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-lila-claro px-2.5 py-2 text-xs font-bold text-lila">
+            <Gem className="size-4" aria-hidden />
+            GEMS
+          </Link>
         )}
-        <form action={salir} className={esAdmin ? "" : "ml-auto"}>
-          <button type="submit" className="flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm text-suave">
-            <LogOut className="size-4" aria-hidden />
-            Salir
+        <form action={salir} className="shrink-0">
+          <button type="submit" className="grid size-9 place-items-center rounded-xl text-suave hover:bg-fondo" aria-label="Salir">
+            <LogOut className="size-5" aria-hidden />
           </button>
         </form>
       </header>
 
       {/* Celular: barra inferior con botones grandes */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-borde/70 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-lg">
+        <div className="mx-auto flex h-[4.5rem] max-w-lg items-stretch">
           {[...items.filter((i) => i.href !== "/ajustes"), { href: "/cuenta", texto: "Cuenta", icono: CircleUserRound }].map(({ href, texto, icono: Icono }) => {
             const esActivo = activo(pathname, href);
             return (
-              <Link key={href} href={href} aria-current={esActivo ? "page" : undefined} className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold">
+              <Link key={href} href={href} data-tour={href === "/cuenta" ? "nav-cuenta nav-ajustes" : `nav-${texto.toLowerCase()}`} aria-current={esActivo ? "page" : undefined} className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold">
                 <span className={`grid h-8 w-14 place-items-center rounded-full transition ${esActivo ? "bg-lila text-white" : "text-suave"}`}>
                   <Icono className="size-5" aria-hidden />
                 </span>
