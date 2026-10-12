@@ -138,3 +138,38 @@ export async function registrarMovimiento(_: EstadoFormulario, formData: FormDat
   revalidatePath("/caja");
   return {};
 }
+
+export async function actualizarCliente(clienteId: string, _: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const { supabase } = await obtenerContexto();
+
+  const dni = normalizarDni(texto(formData, "dni"));
+  const nombre = texto(formData, "nombre");
+  if (!/^[0-9A-Za-z]{4,12}$/.test(dni)) return { error: "El DNI no es válido." };
+  if (!nombre) return { error: "Falta el nombre y apellido." };
+
+  const { error } = await supabase
+    .from("clientes")
+    .update({
+      dni,
+      nombre_completo: nombre,
+      fecha_nacimiento: texto(formData, "nacimiento") || null,
+      telefono: texto(formData, "telefono") || null,
+      direccion: texto(formData, "direccion") || null,
+    })
+    .eq("id", clienteId);
+  if (error) {
+    if (error.code === "23505") return { error: `Ya hay otro cliente con DNI ${dni}.` };
+    return { error: "No se pudieron guardar los cambios." };
+  }
+
+  redirect(`/clientes/${clienteId}`);
+}
+
+export async function anularMovimiento(formData: FormData) {
+  const { supabase } = await obtenerContexto();
+  const motivo = texto(formData, "motivo");
+  if (!motivo) return;
+  await supabase.rpc("anular_movimiento", { p_movimiento_id: texto(formData, "movimiento_id"), p_motivo: motivo });
+  revalidatePath("/caja");
+  revalidatePath("/");
+}

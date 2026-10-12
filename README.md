@@ -34,10 +34,19 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
 | `src/app/(app)` | Pantallas: buscar, cliente, nueva sesión, ficha, caja, ajustes (dueña), mi cuenta |
 | `src/app/(app)/acciones.ts` | Server actions (todas las escrituras) |
 
+### Pruebas de la base
+
+```bash
+npm run test:db
+```
+
+Levanta un Postgres en memoria (PGlite), aplica todas las migraciones y verifica permisos y reglas: aislamiento entre centros, que nada se borre, importador, panel GEMS. Correrlas antes de aplicar una migración nueva en Supabase.
+
 ### Reglas de seguridad
 
 - Cada tabla tiene `centro_id` y Row Level Security: un centro no puede leer ni escribir datos de otro, ni siquiera con la API directa.
-- No hay borrado: las sesiones se **anulan** con motivo; la ficha de salud se **versiona**.
+- No hay borrado: las sesiones y los cobros se **anulan** con motivo; la ficha de salud se **versiona**.
+- Contraseñas olvidadas: la dueña pone una nueva desde Ajustes; a las dueñas se la pone GEMS desde el panel. (El mail de recuperación necesita configurar un servicio de correo propio en Supabase.)
 - Cada alta, cambio y consulta de ficha queda en `auditoria` (solo la dueña la ve).
 - El número de sesión y la operadora los pone la base, no el formulario.
 

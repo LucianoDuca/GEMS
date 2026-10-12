@@ -5,7 +5,8 @@ import { dia, fecha, hoyAR, pesos } from "@/lib/formato";
 import { estadoCentro, nombreMes, type Centro, type Cobro, type UsoCentro } from "@/lib/admin-datos";
 import { etiquetaMedio, type MedioPago, type Rol } from "@/lib/tipos";
 import { Boton, Encabezado, Etiqueta, Indicador, MensajeError, Tarjeta, Vacio } from "@/components/ui";
-import { cambiarEstadoEstetica, cambiarEstadoPersona, marcarCobro } from "../../acciones";
+import { cambiarEstadoEstetica, cambiarEstadoPersona, marcarCobro, restablecerClaveAdmin } from "../../acciones";
+import { FormularioClave } from "@/components/formulario-clave";
 import { FormularioCobro, FormularioDatosEstetica, FormularioPersona } from "../../formularios";
 
 type Persona = { usuario_id: string; nombre: string; email: string | null; rol: Rol; activo: boolean };
@@ -92,6 +93,7 @@ export default async function DetalleEstetica({ params, searchParams }: PageProp
                     <input type="hidden" name="activo" value={String(!p.activo)} />
                     <Boton type="submit" variante={p.activo ? "fantasma" : "secundario"}>{p.activo ? "Quitar acceso" : "Dar acceso"}</Boton>
                   </form>
+                  {p.activo && <FormularioClave usuarioId={p.usuario_id} nombre={p.nombre} accion={restablecerClaveAdmin.bind(null, centro.id)} />}
                 </li>
               ))}
             </ul>

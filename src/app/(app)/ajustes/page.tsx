@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import { CATEGORIAS, type Categoria, type Rol } from "@/lib/tipos";
 import { BotonLink, Encabezado, Tarjeta, Vacio } from "@/components/ui";
-import { cambiarEstadoItem, cambiarEstadoMiembro, editarItem } from "./acciones";
+import { cambiarEstadoItem, cambiarEstadoMiembro, editarItem, restablecerClave } from "./acciones";
+import { FormularioClave } from "@/components/formulario-clave";
 import { FormularioItem, FormularioMiembro } from "./formularios";
 
 type Miembro = { usuario_id: string; nombre: string; email: string | null; rol: Rol; activo: boolean };
@@ -48,6 +49,9 @@ export default async function Ajustes() {
                   <input type="hidden" name="activo" value={String(!m.activo)} />
                   <BotonEstado activo={m.activo} />
                 </form>
+              )}
+              {m.usuario_id !== usuarioId && m.activo && (
+                <FormularioClave usuarioId={m.usuario_id} nombre={m.nombre} accion={restablecerClave} />
               )}
             </li>
           ))}

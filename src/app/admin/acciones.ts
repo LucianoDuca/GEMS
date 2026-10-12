@@ -167,3 +167,19 @@ export async function marcarCobro(formData: FormData) {
   await supabase.from("cobros_gems").update(cambios).eq("id", texto(formData, "cobro_id"));
   revalidatePath("/admin", "layout");
 }
+
+export async function restablecerClaveAdmin(centroId: string, _: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const { supabase } = await obtenerAdmin();
+  const destino = texto(formData, "usuario_id");
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) return { error: "Mínimo 8 caracteres." };
+
+  const { data: miembro } = await supabase.from("miembros").select("nombre").eq("centro_id", centroId).eq("usuario_id", destino).maybeSingle();
+  if (!miembro) return { error: "Esa persona no es de esta estética." };
+
+  const admin = crearClienteAdmin();
+  if (!admin) return { error: "Falta configurar SUPABASE_SECRET_KEY en el servidor." };
+  const { error } = await admin.auth.admin.updateUserById(destino, { password });
+  if (error) return { error: "No se pudo cambiar la contraseña." };
+  return { ok: `Listo. Pasale la contraseña nueva a ${miembro.nombre}.` };
+}

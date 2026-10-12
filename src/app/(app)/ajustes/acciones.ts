@@ -116,3 +116,22 @@ export async function cambiarEstadoItem(formData: FormData) {
     .eq("id", texto(formData, "id"));
   revalidatePath("/ajustes");
 }
+
+// La dueña le pone una contraseña nueva a alguien de SU equipo (no a sí misma: eso va por Mi cuenta).
+export async function restablecerClave(_: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const { supabase, centroId, usuarioId } = await contextoDuena();
+  const destino = texto(formData, "usuario_id");
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) return { error: "Mínimo 8 caracteres." };
+  if (destino === usuarioId) return { error: "Tu propia contraseña se cambia desde Mi cuenta." };
+
+  // La pertenencia se verifica con la sesión de la dueña: RLS solo le muestra su centro.
+  const { data: miembro } = await supabase.from("miembros").select("nombre").eq("centro_id", centroId).eq("usuario_id", destino).maybeSingle();
+  if (!miembro) return { error: "Esa persona no es de tu centro." };
+
+  const admin = crearClienteAdmin();
+  if (!admin) return { error: "Falta configurar SUPABASE_SECRET_KEY en el servidor." };
+  const { error } = await admin.auth.admin.updateUserById(destino, { password });
+  if (error) return { error: "No se pudo cambiar la contraseña." };
+  return { ok: `Listo. Pasale la contraseña nueva a ${miembro.nombre}.` };
+}

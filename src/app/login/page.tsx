@@ -37,7 +37,7 @@ export default function PaginaLogin() {
           <h1 className="text-3xl font-bold tracking-tight">Hola de nuevo</h1>
           <p className="mb-8 mt-2 text-suave">Ingresá con el email y la contraseña que te dio tu centro.</p>
           <FormularioLogin />
-          <p className="mt-8 text-center text-xs text-suave">¿Olvidaste la contraseña? Pedile a la dueña de tu centro que te genere una nueva.</p>
+          <p className="mt-8 text-center text-xs text-suave">¿Olvidaste la contraseña? Pedile a la dueña de tu centro que te ponga una nueva desde Ajustes. Si sos la dueña, escribile a GEMS.</p>
         </div>
       </section>
     </main>

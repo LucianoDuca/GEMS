@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, Phone, Sparkles, Cake } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Cake } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
 import { edad, fecha, fechaHora, pesos } from "@/lib/formato";
 import { PREGUNTAS, textoAlerta } from "@/lib/ficha-salud";
@@ -67,7 +67,13 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
           <div className="relative flex items-center gap-4">
             <Avatar nombre={cliente.nombre_completo} tamano="grande" sobreColor />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">{cliente.nombre_completo}</h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-2xl font-bold tracking-tight">{cliente.nombre_completo}</h1>
+                <Link href={`/clientes/${id}/editar`} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-white/85 ring-1 ring-white/30 hover:bg-white/15 hover:text-white">
+                  <PencilLine className="size-3.5" aria-hidden />
+                  Editar datos
+                </Link>
+              </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85">
                 <span className="inline-flex items-center gap-1.5"><IdCard className="size-4" aria-hidden />DNI {cliente.dni}</span>
                 {cliente.fecha_nacimiento && <span className="inline-flex items-center gap-1.5"><Cake className="size-4" aria-hidden />{edad(cliente.fecha_nacimiento)} años</span>}
