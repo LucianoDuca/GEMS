@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { FileSpreadsheet } from "lucide-react";
+import { Encabezado } from "@/components/ui";
 import { redirect } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import type { Categoria } from "@/lib/tipos";
@@ -15,13 +16,12 @@ export default async function PaginaImportar() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <Link href="/ajustes" className="text-sm text-suave hover:text-lila">← Ajustes</Link>
-        <h1 className="mt-1 text-xl font-semibold">Importar planillas</h1>
-        <p className="text-sm text-suave">
-          Traé a {centroNombre} el historial de las planillas de Google Forms: ficha de salud, seguimiento de depilación y de tratamiento reductor.
-        </p>
-      </div>
+      <Encabezado
+        icono={FileSpreadsheet}
+        titulo="Importar planillas"
+        descripcion={`Traé a ${centroNombre} el historial de los Google Forms: ficha de salud, depilación y reductor.`}
+        volver={{ href: "/ajustes", texto: "Ajustes" }}
+      />
       <Importador
         tratamientos={(tratamientos ?? []) as { nombre: string; categoria: Categoria }[]}
         zonas={(zonas ?? []) as { nombre: string; abreviatura: string | null; categoria: Categoria }[]}

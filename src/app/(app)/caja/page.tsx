@@ -1,8 +1,9 @@
+import { ListOrdered, Plus, Wallet } from "lucide-react";
 import Link from "next/link";
 import { obtenerContexto } from "@/lib/contexto";
 import { hora, hoyAR, pesos, rangoDia } from "@/lib/formato";
 import { etiquetaMedio, MEDIOS_PAGO, type MedioPago } from "@/lib/tipos";
-import { Input, Tarjeta, Vacio } from "@/components/ui";
+import { Encabezado, Input, Tarjeta, Vacio } from "@/components/ui";
 import { FormularioMovimiento } from "./formulario";
 
 type Movimiento = {
@@ -41,21 +42,25 @@ export default async function Caja({ searchParams }: PageProps<"/caja">) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-xl font-semibold">Caja</h1>
-        <form className="flex items-center gap-2" action="/caja">
-          <Input type="date" name="dia" defaultValue={dia} aria-label="Día" className="w-auto" />
-          <button type="submit" className="rounded-xl border border-borde bg-white px-3 py-2.5 text-sm font-semibold hover:border-lila">Ver</button>
-        </form>
-      </div>
+      <Encabezado
+        icono={Wallet}
+        titulo="Caja"
+        descripcion={dia === hoyAR() ? "Lo que entró y salió hoy" : `Movimientos del ${dia.split("-").reverse().join("/")}`}
+        acciones={
+          <form className="flex items-center gap-2" action="/caja">
+            <Input type="date" name="dia" defaultValue={dia} aria-label="Elegir día" className="w-auto py-2.5" />
+            <button type="submit" className="rounded-xl border border-borde bg-white px-4 py-2.5 text-sm font-semibold hover:border-lila hover:text-lila">Ver día</button>
+          </form>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="col-span-2 rounded-2xl bg-lila p-4 text-white sm:col-span-1">
+        <div className="col-span-2 rounded-3xl bg-gradient-to-br from-lila to-lila-oscuro p-5 text-white shadow-lg shadow-lila/25 sm:col-span-1">
           <div className="text-sm text-white/80">Total del día</div>
-          <div className="text-2xl font-semibold tabular-nums">{pesos(total)}</div>
+          <div className="mt-1 text-3xl font-bold tabular-nums">{pesos(total)}</div>
         </div>
         {porMedio.map((m) => (
-          <div key={m.valor} className="rounded-2xl border border-borde bg-white p-4">
+          <div key={m.valor} className="rounded-3xl border border-borde/70 bg-white p-5 shadow-sm">
             <div className="text-sm text-suave">{m.etiqueta}</div>
             <div className="text-lg font-semibold tabular-nums">{pesos(m.total)}</div>
           </div>
@@ -63,14 +68,14 @@ export default async function Caja({ searchParams }: PageProps<"/caja">) {
       </div>
 
       {dia === hoyAR() && (
-        <Tarjeta titulo="Registrar movimiento">
+        <Tarjeta titulo="Registrar un cobro o gasto" icono={Plus}>
           <FormularioMovimiento />
         </Tarjeta>
       )}
 
-      <Tarjeta titulo="Movimientos">
+      <Tarjeta titulo="Movimientos" icono={ListOrdered}>
         {movimientos.length === 0 ? (
-          <Vacio>Sin movimientos este día.</Vacio>
+          <Vacio icono={Wallet}>Sin movimientos este día.</Vacio>
         ) : (
           <ul className="divide-y divide-borde">
             {movimientos.map((m) => (

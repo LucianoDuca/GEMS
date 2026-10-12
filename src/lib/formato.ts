@@ -30,3 +30,7 @@ export const edad = (nacimiento: string) => {
   if (hoy < new Date(hoy.getFullYear(), n.getMonth(), n.getDate())) anios--;
   return anios;
 };
+
+// Fechas sin hora (YYYY-MM-DD): se muestran tal cual, sin pasar por la zona horaria.
+export const dia = (yyyyMmDd: string) =>
+  new Intl.DateTimeFormat("es-AR", { timeZone: "UTC", dateStyle: "medium" }).format(new Date(`${yyyyMmDd.slice(0, 10)}T00:00:00Z`));

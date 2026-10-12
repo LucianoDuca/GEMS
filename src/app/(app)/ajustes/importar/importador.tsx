@@ -167,7 +167,7 @@ function Resultado({ resumen: r }: { resumen: ResumenImportacion }) {
         Las fichas importadas no incluyen la autorización de uso de datos (Ley 25.326). En la próxima visita de cada clienta, actualizá su ficha para que la firme.
       </p>
       <div className="flex gap-2">
-        <BotonLink href="/">Ir a clientes</BotonLink>
+        <BotonLink href="/clientes">Ir a clientes</BotonLink>
         <BotonLink href="/ajustes" variante="secundario">Revisar catálogo</BotonLink>
       </div>
     </Tarjeta>

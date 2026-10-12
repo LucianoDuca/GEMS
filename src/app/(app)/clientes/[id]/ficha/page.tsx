@@ -1,3 +1,5 @@
+import { HeartPulse } from "lucide-react";
+import { Encabezado } from "@/components/ui";
 import { notFound } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import type { Respuestas } from "@/lib/ficha-salud";
@@ -14,14 +16,13 @@ export default async function ActualizarFicha({ params }: PageProps<"/clientes/[
   if (!cliente) notFound();
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-xl font-semibold">Actualizar ficha de salud</h1>
-        <p className="text-sm text-suave">
-          {cliente.nombre_completo} · DNI {cliente.dni}
-          {ficha && ` · se guarda como versión ${ficha.version + 1}; la anterior queda en el historial`}
-        </p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <Encabezado
+        icono={HeartPulse}
+        titulo="Actualizar ficha de salud"
+        descripcion={`${cliente.nombre_completo} · DNI ${cliente.dni}${ficha ? " · La versión anterior queda guardada en el historial" : ""}`}
+        volver={{ href: `/clientes/${id}`, texto: cliente.nombre_completo }}
+      />
       <FormularioFicha clienteId={id} previa={(ficha?.respuestas ?? undefined) as Respuestas | undefined} />
     </div>
   );

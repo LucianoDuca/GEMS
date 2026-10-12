@@ -1,4 +1,6 @@
+import { UserPlus } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
+import { Encabezado } from "@/components/ui";
 import { FormularioCliente } from "./formulario";
 
 export default async function NuevoCliente({ searchParams }: PageProps<"/clientes/nuevo">) {
@@ -6,9 +8,14 @@ export default async function NuevoCliente({ searchParams }: PageProps<"/cliente
   const { dni } = await searchParams;
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Cliente nuevo</h1>
+    <>
+      <Encabezado
+        icono={UserPlus}
+        titulo="Alta de cliente"
+        descripcion="Completá los datos y la ficha de salud junto con la persona. Toma unos 3 minutos."
+        volver={{ href: "/clientes", texto: "Clientes" }}
+      />
       <FormularioCliente dni={typeof dni === "string" ? dni : undefined} />
-    </div>
+    </>
   );
 }

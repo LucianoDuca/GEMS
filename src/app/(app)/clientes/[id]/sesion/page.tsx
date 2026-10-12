@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import { textoAlerta } from "@/lib/ficha-salud";
 import type { Categoria } from "@/lib/tipos";
-import { Alerta } from "@/components/ui";
+import { CalendarPlus } from "lucide-react";
+import { Alerta, Encabezado } from "@/components/ui";
 import { FormularioSesion } from "./formulario";
 
 export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/sesion">) {
@@ -22,11 +23,13 @@ export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/
   const respuestas = (ficha?.respuestas ?? {}) as Record<string, { detalle?: string }>;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-xl font-semibold">Nueva sesión</h1>
-        <p className="text-sm text-suave">{cliente.nombre_completo} · DNI {cliente.dni}</p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <Encabezado
+        icono={CalendarPlus}
+        titulo="Registrar sesión"
+        descripcion={`${cliente.nombre_completo} · DNI ${cliente.dni}`}
+        volver={{ href: `/clientes/${id}`, texto: cliente.nombre_completo }}
+      />
 
       {alertas.length > 0 && (
         <div className="flex flex-col gap-2 rounded-2xl border border-alerta/30 bg-alerta-claro p-4">

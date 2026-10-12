@@ -1,7 +1,8 @@
+import { FileSpreadsheet, MapPinned, Settings, Sparkles, UsersRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import { CATEGORIAS, type Categoria, type Rol } from "@/lib/tipos";
-import { BotonLink, Tarjeta, Vacio } from "@/components/ui";
+import { BotonLink, Encabezado, Tarjeta, Vacio } from "@/components/ui";
 import { cambiarEstadoItem, cambiarEstadoMiembro, editarItem } from "./acciones";
 import { FormularioItem, FormularioMiembro } from "./formularios";
 
@@ -9,23 +10,25 @@ type Miembro = { usuario_id: string; nombre: string; email: string | null; rol: 
 type Item = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria; activo: boolean };
 
 export default async function Ajustes() {
-  const { supabase, rol, usuarioId } = await obtenerContexto();
+  const { supabase, rol, usuarioId, centroId } = await obtenerContexto();
   if (rol !== "duena") redirect("/");
 
   const [{ data: miembros }, { data: tratamientos }, { data: zonas }] = await Promise.all([
-    supabase.from("miembros").select("usuario_id, nombre, email, rol, activo").order("activo", { ascending: false }).order("nombre").returns<Miembro[]>(),
+    supabase.from("miembros").select("usuario_id, nombre, email, rol, activo").eq("centro_id", centroId).order("activo", { ascending: false }).order("nombre").returns<Miembro[]>(),
     supabase.from("tratamientos").select("id, nombre, categoria, activo").order("categoria").order("orden").returns<Item[]>(),
     supabase.from("zonas").select("id, nombre, abreviatura, categoria, activo").order("categoria").order("orden").returns<Item[]>(),
   ]);
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Ajustes del centro</h1>
-        <BotonLink href="/ajustes/importar" variante="secundario">Importar planillas</BotonLink>
-      </div>
+      <Encabezado
+        icono={Settings}
+        titulo="Ajustes del centro"
+        descripcion="Tu equipo y los tratamientos y zonas que aparecen al registrar sesiones."
+        acciones={<BotonLink href="/ajustes/importar" variante="secundario" icono={FileSpreadsheet}>Importar planillas</BotonLink>}
+      />
 
-      <Tarjeta titulo="Equipo">
+      <Tarjeta titulo="Equipo" icono={UsersRound}>
         <ul className="mb-6 divide-y divide-borde">
           {(miembros ?? []).map((m) => (
             <li key={m.usuario_id} className={`flex flex-wrap items-center gap-x-4 gap-y-1 py-3 ${m.activo ? "" : "opacity-50"}`}>
@@ -63,7 +66,7 @@ function Catalogo({ titulo, catalogo, items }: { titulo: string; catalogo: "trat
   const categorias = CATEGORIAS.filter((c) => items.some((i) => i.categoria === c.valor));
 
   return (
-    <Tarjeta titulo={titulo}>
+    <Tarjeta titulo={titulo} icono={catalogo === "zonas" ? MapPinned : Sparkles}>
       {categorias.length === 0 && <Vacio>Todavía no hay {titulo.toLowerCase()}.</Vacio>}
       {categorias.map((c) => (
         <section key={c.valor} className="mb-5">

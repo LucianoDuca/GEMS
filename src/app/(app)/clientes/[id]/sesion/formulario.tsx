@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Banknote, Layers, MapPinned, NotebookPen, Save, Sparkles } from "lucide-react";
 import { Boton, Campo, Input, MensajeError, Select, Tarjeta, Textarea } from "@/components/ui";
 import { CATEGORIAS, MEDIOS_PAGO, type Categoria } from "@/lib/tipos";
 import { registrarSesion } from "../../../acciones";
@@ -27,7 +28,7 @@ export function FormularioSesion({
 
   return (
     <form action={accion} className="flex flex-col gap-6">
-      <Tarjeta titulo="Tipo de sesión">
+      <Tarjeta titulo="1. ¿Qué se hizo?" icono={Layers}>
         <div className="flex flex-wrap gap-2">
           {CATEGORIAS.filter((c) => tratamientos.some((t) => t.categoria === c.valor)).map((c) => (
             <label key={c.valor} className={chip(categoria === c.valor)}>
@@ -38,17 +39,17 @@ export function FormularioSesion({
         </div>
       </Tarjeta>
 
-      <Tarjeta titulo="Tratamientos" key={`t-${categoria}`}>
+      <Tarjeta titulo="2. Tratamientos" icono={Sparkles} key={`t-${categoria}`}>
         <Chips nombre="tratamientos" opciones={tratamientosVisibles} todasMarcadas={unicoTratamiento} />
       </Tarjeta>
 
       {zonasVisibles.length > 0 && (
-        <Tarjeta titulo="Zonas" key={`z-${categoria}`}>
+        <Tarjeta titulo="3. Zonas" icono={MapPinned} key={`z-${categoria}`}>
           <Chips nombre="zonas" opciones={zonasVisibles} />
         </Tarjeta>
       )}
 
-      <Tarjeta titulo="Detalle">
+      <Tarjeta titulo="Detalle" icono={NotebookPen}>
         <div className="flex flex-col gap-4">
           <Campo etiqueta="Potencia">
             <Input name="potencia" inputMode="decimal" />
@@ -59,7 +60,7 @@ export function FormularioSesion({
         </div>
       </Tarjeta>
 
-      <Tarjeta titulo="Cobro (opcional)">
+      <Tarjeta titulo="Cobro (opcional)" icono={Banknote}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo etiqueta="Monto en pesos">
             <Input name="monto" inputMode="decimal" placeholder="0" />
@@ -74,9 +75,11 @@ export function FormularioSesion({
       </Tarjeta>
 
       <MensajeError>{estado?.error}</MensajeError>
-      <Boton type="submit" disabled={enviando} className="sticky bottom-4 shadow-lg sm:static sm:self-end sm:shadow-none">
-        {enviando ? "Guardando…" : "Guardar sesión"}
-      </Boton>
+      <div className="sticky bottom-24 z-10 flex justify-end lg:bottom-6">
+        <Boton type="submit" disabled={enviando} tamano="grande" icono={Save} className="w-full shadow-xl sm:w-auto">
+          {enviando ? "Guardando…" : "Guardar sesión"}
+        </Boton>
+      </div>
     </form>
   );
 }
@@ -106,6 +109,6 @@ function Chips({ nombre, opciones, todasMarcadas = false }: { nombre: string; op
 }
 
 const chip = (activo: boolean) =>
-  `cursor-pointer select-none rounded-full border px-4 py-2 text-sm font-medium transition ${
-    activo ? "border-lila bg-lila text-white" : "border-borde bg-white hover:border-lila"
+  `cursor-pointer select-none rounded-2xl border-2 px-4 py-2.5 text-[15px] font-semibold transition ${
+    activo ? "border-lila bg-lila text-white shadow-md shadow-lila/25" : "border-borde bg-white hover:border-lila hover:text-lila"
   }`;

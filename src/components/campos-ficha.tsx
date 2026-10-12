@@ -39,15 +39,15 @@ function PreguntaSiNo({ pregunta, previa }: { pregunta: Pregunta; previa?: { val
   const riesgo = pregunta.alerta && valor === (pregunta.alertaSi ?? "si");
 
   return (
-    <div className={`rounded-xl px-3 py-3 ${riesgo ? "bg-alerta-claro" : ""}`}>
+    <div className={`rounded-2xl px-4 py-3 transition ${riesgo ? "bg-alerta-claro ring-1 ring-alerta/20" : "odd:bg-fondo/60"}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-sm">{pregunta.texto}</span>
+        <span className="text-[15px]">{pregunta.texto}</span>
         <div className="flex gap-1" role="radiogroup" aria-label={pregunta.texto}>
           {(["si", "no"] as const).map((opcion) => (
             <label
               key={opcion}
-              className={`cursor-pointer rounded-lg border px-4 py-1.5 text-sm font-semibold transition ${
-                valor === opcion ? "border-lila bg-lila text-white" : "border-borde bg-white hover:border-lila"
+              className={`min-w-16 cursor-pointer rounded-xl border-2 px-5 py-2 text-center text-[15px] font-bold transition ${
+                valor === opcion ? "border-lila bg-lila text-white shadow-md shadow-lila/25" : "border-borde bg-white hover:border-lila hover:text-lila"
               }`}
             >
               <input
