@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Mes = { mes: string; etiqueta: string; total: number };
 
-const ANCHO = 720;
 const ALTO = 260;
 const M = { arriba: 16, derecha: 8, abajo: 32, izquierda: 64 };
 
@@ -22,6 +21,18 @@ function pasoRedondo(maximo: number, marcas = 4) {
 
 export function GraficoRecaudacion({ meses }: { meses: Mes[] }) {
   const [activo, setActivo] = useState<number | null>(null);
+  // Se dibuja al ancho real del contenedor: así el texto de los ejes queda siempre en 12px.
+  const contenedor = useRef<HTMLDivElement>(null);
+  const [ANCHO, setAncho] = useState(720);
+  useEffect(() => {
+    const el = contenedor.current;
+    if (!el) return;
+    const medir = () => setAncho(Math.max(300, Math.round(el.clientWidth)));
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, []);
 
   const maximo = Math.max(...meses.map((m) => m.total), 1);
   const paso = pasoRedondo(maximo);
@@ -46,8 +57,8 @@ export function GraficoRecaudacion({ meses }: { meses: Mes[] }) {
 
   return (
     <div>
-      <div className="relative">
-        <svg viewBox={`0 0 ${ANCHO} ${ALTO}`} className="h-auto w-full" role="img" aria-label="Recaudación de GEMS por mes, últimos 12 meses">
+      <div ref={contenedor} className="relative">
+        <svg viewBox={`0 0 ${ANCHO} ${ALTO}`} width={ANCHO} height={ALTO} className="block max-w-full" role="img" aria-label="Recaudación de GEMS por mes, últimos 12 meses">
           {marcas.map((v) => (
             <g key={v}>
               <line x1={M.izquierda} x2={ANCHO - M.derecha} y1={y(v)} y2={y(v)} stroke="#ece8ee" strokeWidth={1} />
@@ -74,7 +85,7 @@ export function GraficoRecaudacion({ meses }: { meses: Mes[] }) {
                 <rect x={M.izquierda + i * banda} y={M.arriba} width={banda} height={altoPlot} fill={activo === i ? "#f6eaf2" : "transparent"} rx={6} />
                 {m.total > 0 && <path d={barra(x, alto)} fill="#a65287" opacity={activo === null || activo === i ? 1 : 0.45} />}
                 <text x={x + anchoBarra / 2} y={ALTO - 10} textAnchor="middle" fontSize={12} fill={activo === i ? "#1f1a24" : "#6b6472"} fontWeight={activo === i ? 600 : 400}>
-                  {m.etiqueta.slice(0, 3)}
+                  {m.etiqueta.slice(0, banda < 30 ? 1 : 3)}
                 </text>
               </g>
             );
@@ -83,7 +94,7 @@ export function GraficoRecaudacion({ meses }: { meses: Mes[] }) {
         </svg>
         {seleccion && activo !== null && (
           <div
-            className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-xl bg-tinta px-3 py-2 text-xs text-white shadow-lg"
+            className={`pointer-events-none absolute top-0 rounded-xl bg-tinta px-3 py-2 text-xs text-white shadow-lg ${activo < 2 ? "" : activo > meses.length - 3 ? "-translate-x-full" : "-translate-x-1/2"}`}
             style={{ left: `${((M.izquierda + activo * banda + banda / 2) / ANCHO) * 100}%` }}
           >
             <div className="font-medium capitalize text-white/70">{seleccion.etiqueta}</div>

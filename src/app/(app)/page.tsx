@@ -40,7 +40,7 @@ export default async function Inicio() {
         <div aria-hidden className="absolute -right-16 -top-16 size-64 rounded-full bg-celeste/30 blur-3xl" />
         <div aria-hidden className="absolute -bottom-20 left-1/3 size-56 rounded-full bg-white/10 blur-3xl" />
         <div className="relative">
-          <p className="text-sm font-medium capitalize text-white/80">{fechaLarga}</p>
+          <p className="text-sm font-medium text-white/80 first-letter:uppercase">{fechaLarga}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{saludo()}, {primerNombre}</h1>
           <p className="mt-1 text-white/85">¿A quién atendés ahora? Buscá por DNI o por nombre.</p>
           <form action="/clientes" className="mt-5 flex flex-col gap-2 sm:flex-row">
