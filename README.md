@@ -5,7 +5,7 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
 ## Puesta en marcha
 
 1. **Crear el proyecto en Supabase** (supabase.com → New project). Región: São Paulo.
-2. **Crear la base:** en Supabase → SQL Editor, pegar y ejecutar `supabase/migrations/0001_esquema_inicial.sql`.
+2. **Crear la base:** en Supabase → SQL Editor, ejecutar en orden los archivos de `supabase/migrations/` (0001, 0002, …).
 3. **Datos de prueba (opcional):** ejecutar `supabase/seed.sql`. Son datos ficticios, nunca cargar clientes reales ahí.
 4. **Crear tu usuario:** Authentication → Users → Add user (email + contraseña, marcar "Auto confirm").
 5. **Vincularte al centro:** en el SQL Editor, con tu email:
@@ -14,7 +14,7 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
    select '11111111-1111-1111-1111-111111111111', id, 'duena', 'Tu nombre'
    from auth.users where email = 'tu-email@ejemplo.com';
    ```
-6. **Variables de entorno:** copiar `.env.example` a `.env.local` y completar con Project Settings → API (URL y publishable key).
+6. **Variables de entorno:** copiar `.env.example` a `.env.local` y completar con Project Settings → API Keys. `SUPABASE_SECRET_KEY` solo hace falta para dar de alta operadoras desde Ajustes; va únicamente en el servidor (local y Vercel), nunca con prefijo `NEXT_PUBLIC_`.
 7. **Levantar:**
    ```bash
    npm install
@@ -30,7 +30,7 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
 | `src/proxy.ts` | Refresca la sesión y manda al login a quien no está autenticado |
 | `src/lib/contexto.ts` | Quién es el usuario y de qué centro; toda página pasa por acá |
 | `src/lib/ficha-salud.ts` | El cuestionario de salud y qué respuestas generan alertas |
-| `src/app/(app)` | Pantallas: buscar, cliente, nueva sesión, ficha, caja |
+| `src/app/(app)` | Pantallas: buscar, cliente, nueva sesión, ficha, caja, ajustes (dueña), mi cuenta |
 | `src/app/(app)/acciones.ts` | Server actions (todas las escrituras) |
 
 ### Reglas de seguridad
@@ -45,4 +45,3 @@ Sistema de gestión para centros de estética: clientes, ficha de salud versiona
 - Confirmar con el centro los nombres de las zonas de depilación marcadas con (?) en el seed (PC, LAT, CC, TC, LA, BRB).
 - Las preguntas de "condiciones" y "afecciones de la piel" eran de opción múltiple en el Form original; acá quedaron como Sí/No + detalle hasta tener la lista de opciones.
 - Importador de las planillas actuales del cliente.
-- Pantalla para que la dueña administre catálogos y operadoras.

@@ -16,12 +16,15 @@ export default async function LayoutApp({ children }: LayoutProps<"/">) {
           <nav className="flex gap-1 text-sm font-semibold">
             <Link href="/" className="rounded-lg px-3 py-2 hover:bg-lila-claro hover:text-lila">Clientes</Link>
             <Link href="/caja" className="rounded-lg px-3 py-2 hover:bg-lila-claro hover:text-lila">Caja</Link>
+            {rol === "duena" && (
+              <Link href="/ajustes" className="rounded-lg px-3 py-2 hover:bg-lila-claro hover:text-lila">Ajustes</Link>
+            )}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-right">
-            <div className="hidden text-xs leading-tight sm:block">
+            <Link href="/cuenta" className="hidden rounded-lg px-2 py-1 text-xs leading-tight hover:bg-fondo sm:block">
               <div className="font-semibold">{centroNombre}</div>
               <div className="text-suave">{nombre} · {rol === "duena" ? "Dueña" : "Operadora"}</div>
-            </div>
+            </Link>
             <form action={salir}>
               <button type="submit" className="rounded-lg px-3 py-2 text-sm text-suave hover:bg-fondo hover:text-tinta">Salir</button>
             </form>

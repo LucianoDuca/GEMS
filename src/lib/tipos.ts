@@ -41,4 +41,4 @@ export type Ficha = {
   firmada_en: string;
 };
 
-export type EstadoFormulario = { error?: string } | undefined;
+export type EstadoFormulario = { error?: string; ok?: string } | undefined;
