@@ -40,9 +40,12 @@ export default async function Inicio() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-lila via-lila to-lila-oscuro p-6 text-white shadow-xl shadow-lila/20 sm:p-8">
-        <div aria-hidden className="absolute -right-16 -top-16 size-64 rounded-full bg-celeste/30 blur-3xl" />
-        <div aria-hidden className="absolute -bottom-20 left-1/3 size-56 rounded-full bg-white/10 blur-3xl" />
+      <section className="relative z-20 rounded-[2rem] bg-gradient-to-br from-lila via-lila to-lila-oscuro p-6 text-white shadow-xl shadow-lila/20 sm:p-8">
+        {/* La decoración se recorta en su propia capa, así el buscador puede desplegar resultados por fuera. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]">
+          <div className="absolute -right-16 -top-16 size-64 rounded-full bg-celeste/30 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/3 size-56 rounded-full bg-white/10 blur-3xl" />
+        </div>
         <div className="relative">
           <p className="text-sm font-medium text-white/80 first-letter:uppercase">{fechaLarga}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{saludo()}, {primerNombre}</h1>
