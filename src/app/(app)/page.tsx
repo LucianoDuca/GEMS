@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { CalendarCheck, ChevronRight, Sparkles, UserPlus, Users, Wallet } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
@@ -6,6 +7,7 @@ import type { Categoria } from "@/lib/tipos";
 import { Accion, Avatar, Indicador, Tarjeta, Vacio } from "@/components/ui";
 import { EtiquetaCategoria } from "@/components/categoria";
 import { BuscadorClientes } from "@/components/buscador-clientes";
+import { ContactarHoy } from "@/components/contactar-hoy";
 
 function saludo() {
   const horaAR = Number(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "numeric", hourCycle: "h23" }).format(new Date()));
@@ -15,7 +17,7 @@ function saludo() {
 }
 
 export default async function Inicio() {
-  const { supabase, nombre, rol } = await obtenerContexto();
+  const { supabase, nombre, rol, centroNombre } = await obtenerContexto();
   const hoy = hoyAR();
   const { inicio, fin } = rangoDia(hoy);
   const inicioMes = rangoDia(`${hoy.slice(0, 7)}-01`).inicio;
@@ -61,6 +63,10 @@ export default async function Inicio() {
         <Indicador icono={Wallet} etiqueta="Caja de hoy" valor={pesos(cajaHoy)} detalle={rol === "operadora" ? "Ingresos menos egresos" : undefined} />
         <Indicador icono={Sparkles} etiqueta="Clientes nuevos del mes" valor={nuevosMes ?? 0} />
       </div>
+
+      <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
+        <ContactarHoy supabase={supabase} centroNombre={centroNombre} hoy={hoy} />
+      </Suspense>
 
       <Tarjeta titulo="Lo que se atendió hoy" icono={CalendarCheck} accion={<Link href="/clientes" className="text-sm font-semibold text-lila hover:underline">Ver clientes</Link>}>
         {!deHoy?.length ? (

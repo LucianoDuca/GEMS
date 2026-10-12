@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Tag, Cake } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Tag, Cake, Images, MessageCircle, Trash2 } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
 import { edad, fecha, fechaHora, pesos } from "@/lib/formato";
 import { PREGUNTAS, textoAlerta } from "@/lib/ficha-salud";
-import type { Categoria, Cliente, Ficha } from "@/lib/tipos";
+import { CATEGORIAS, etiquetaCategoria, type Categoria, type Cliente, type Ficha } from "@/lib/tipos";
 import { Alerta, Avatar, Boton, BotonLink, Etiqueta, Input, Tarjeta, Vacio } from "@/components/ui";
 import { EtiquetaCategoria } from "@/components/categoria";
-import { anularSesion } from "../../acciones";
+import { anularSesion, borrarFoto, subirFoto } from "../../acciones";
+import { Comparador, SubirFoto } from "@/components/fotos";
+import { ESTILO_CATEGORIA } from "@/components/categoria";
+import { diasEntre, enlaceWhatsapp, mensajes, proximaSesion } from "@/lib/fidelizacion";
 
 type SesionHistorial = {
   id: string;
@@ -25,7 +28,7 @@ type SesionHistorial = {
 
 export default async function PaginaCliente({ params }: PageProps<"/clientes/[id]">) {
   const { id } = await params;
-  const { supabase, centroId } = await obtenerContexto();
+  const { supabase, centroId, centroNombre, rol } = await obtenerContexto();
 
   const { data: cliente } = await supabase
     .from("clientes")
@@ -37,7 +40,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
   // Cada apertura de la ficha queda en la auditoría.
   await supabase.rpc("registrar_consulta_ficha", { p_cliente_id: id });
 
-  const [{ data: ficha }, { data: totales }, { data: sesiones }, { data: miembros }, { data: pagos }] = await Promise.all([
+  const [{ data: ficha }, { data: totales }, { data: sesiones }, { data: miembros }, { data: pagos }, { data: fotos }] = await Promise.all([
     supabase.from("fichas_vigentes").select("id, version, respuestas, alertas, firmada_en, firma").eq("cliente_id", id).maybeSingle<Ficha>(),
     supabase.from("totales_tratamiento").select("tratamiento, categoria, sesiones, ultima_sesion").eq("cliente_id", id).order("sesiones", { ascending: false }),
     supabase
@@ -48,7 +51,27 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
       .returns<SesionHistorial[]>(),
     supabase.from("miembros").select("usuario_id, nombre").eq("centro_id", centroId),
     supabase.from("caja_movimientos").select("monto").eq("cliente_id", id).eq("tipo", "ingreso").eq("anulado", false),
+    supabase.from("fotos").select("id, tipo, zona, ruta, tomada_en").eq("cliente_id", id).order("tomada_en", { ascending: false }).limit(60),
   ]);
+
+  // Enlaces temporales (1 hora) a las fotos privadas.
+  const { data: enlaces } = fotos?.length
+    ? await supabase.storage.from("fotos").createSignedUrls(fotos.map((f) => f.ruta), 3600)
+    : { data: [] };
+  const urlDe = new Map((enlaces ?? []).map((e) => [e.path, e.signedUrl]));
+  const galeria = (fotos ?? []).flatMap((f) => { const url = urlDe.get(f.ruta); return url ? [{ ...f, url }] : []; });
+  const primeraAntes = [...galeria].reverse().find((f) => f.tipo === "antes");
+  const ultimaDespues = galeria.find((f) => f.tipo === "despues" || f.tipo === "progreso");
+
+  // Cuándo le toca volver, por cada tipo de tratamiento que hizo.
+  const ahora = new Date();
+  const proximas = CATEGORIAS.flatMap(({ valor }) => {
+    const ultima = (sesiones ?? []).find((s) => !s.anulada && s.categoria === valor);
+    if (!ultima) return [];
+    const proxima = proximaSesion(ultima.realizada_en, valor);
+    return [{ categoria: valor, proxima, dias: diasEntre(ahora, proxima) }];
+  });
+  const whatsapp = enlaceWhatsapp(cliente.telefono, mensajes.saludo(cliente.nombre_completo, centroNombre));
 
   const nombreOperadora = new Map((miembros ?? []).map((m) => [m.usuario_id as string, m.nombre as string]));
   const totalPagado = (pagos ?? []).reduce((suma, p) => suma + Number(p.monto), 0);
@@ -94,6 +117,12 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
             </div>
           </div>
           <div className="relative flex flex-col gap-2 sm:flex-row">
+            {whatsapp && (
+              <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#25d366] px-5 py-4 text-base font-semibold text-white shadow-lg hover:brightness-95">
+                <MessageCircle className="size-5" aria-hidden />
+                WhatsApp
+              </a>
+            )}
             <BotonLink href={`/clientes/${id}/sesion`} tamano="grande" icono={CalendarPlus} className="!bg-white !text-lila !shadow-lg hover:!bg-lila-claro">Registrar sesión</BotonLink>
             <BotonLink href={`/clientes/${id}/ficha`} tamano="grande" variante="fantasma" icono={ClipboardPlus} className="border border-white/40 !text-white hover:!bg-white/15">Actualizar ficha</BotonLink>
           </div>
@@ -109,6 +138,26 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
           </div>
         )}
       </section>
+
+      {proximas.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {proximas.map((p) => {
+            const { icono: Icono, chip } = ESTILO_CATEGORIA[p.categoria];
+            const atrasada = p.dias < 0;
+            return (
+              <div key={p.categoria} className="flex items-center gap-3 rounded-2xl border border-borde/70 bg-white p-4 shadow-sm">
+                <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${chip}`}><Icono className="size-5" aria-hidden /></span>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-suave">Próxima {etiquetaCategoria(p.categoria).toLowerCase()}</div>
+                  <div className={`font-semibold ${atrasada ? "text-alerta" : ""}`}>
+                    {p.dias === 0 ? "Le toca hoy" : atrasada ? `Le tocaba hace ${-p.dias} día${p.dias === -1 ? "" : "s"}` : `${fecha(p.proxima.toISOString())} · en ${p.dias} día${p.dias === 1 ? "" : "s"}`}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Totales */}
       <Tarjeta titulo="Sesiones por tratamiento" icono={Sparkles} accion={totalPagado > 0 && <Etiqueta tono="celeste">Pagado {pesos(totalPagado)}</Etiqueta>}>
@@ -195,6 +244,41 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
             ))}
           </ol>
         )}
+      </Tarjeta>
+
+      {/* Fotos */}
+      <Tarjeta titulo={`Fotos${galeria.length ? ` · ${galeria.length}` : ""}`} icono={Images}>
+        {primeraAntes && ultimaDespues && (
+          <div className="mb-5">
+            <p className="mb-2 text-sm text-suave">Deslizá para comparar el antes ({fecha(primeraAntes.tomada_en)}) con la última foto ({fecha(ultimaDespues.tomada_en)}).</p>
+            <Comparador antes={primeraAntes.url!} despues={ultimaDespues.url!} />
+          </div>
+        )}
+        {galeria.length > 0 && (
+          <ul className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            {galeria.map((f) => (
+              <li key={f.id} className="group relative aspect-square overflow-hidden rounded-xl bg-fondo">
+                <a href={f.url} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- enlace firmado temporal de Supabase */}
+                  <img src={f.url} alt={`Foto ${f.tipo}${f.zona ? `, ${f.zona}` : ""}`} loading="lazy" className="size-full object-cover transition group-hover:scale-105" />
+                </a>
+                <span className="pointer-events-none absolute inset-x-1 bottom-1 truncate rounded-lg bg-black/55 px-2 py-0.5 text-[11px] font-semibold capitalize text-white">
+                  {f.tipo === "despues" ? "Después" : f.tipo}{f.zona ? ` · ${f.zona}` : ""} · {fecha(f.tomada_en)}
+                </span>
+                {rol === "duena" && (
+                  <form action={borrarFoto} className="absolute right-1 top-1 opacity-0 transition group-hover:opacity-100">
+                    <input type="hidden" name="foto_id" value={f.id} />
+                    <button type="submit" title="Borrar foto" className="grid size-7 place-items-center rounded-lg bg-black/60 text-white hover:bg-alerta">
+                      <Trash2 className="size-3.5" aria-hidden />
+                      <span className="sr-only">Borrar foto</span>
+                    </button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <SubirFoto accion={subirFoto.bind(null, id)} />
       </Tarjeta>
 
       {/* Ficha de salud */}

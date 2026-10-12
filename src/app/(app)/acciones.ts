@@ -203,3 +203,53 @@ export async function marcarContactado(formData: FormData) {
   await supabase.from("contactos").insert({ centro_id: centroId, cliente_id: texto(formData, "cliente_id"), motivo });
   revalidatePath("/");
 }
+
+const TIPOS_FOTO = ["antes", "despues", "progreso"] as const;
+const FORMATOS_FOTO: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+// Las fotos van a un almacenamiento privado: la carpeta de cada centro solo la ve su equipo.
+export async function subirFoto(clienteId: string, _: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const { supabase, centroId } = await obtenerContexto();
+  const archivo = formData.get("foto");
+  const tipo = texto(formData, "tipo");
+
+  if (!(archivo instanceof File) || archivo.size === 0) return { error: "Elegí o sacá una foto." };
+  if (archivo.size > 5 * 1024 * 1024) return { error: "La foto es muy pesada (máximo 5 MB)." };
+  const extension = FORMATOS_FOTO[archivo.type];
+  if (!extension) return { error: "El archivo tiene que ser una foto (JPG, PNG o WEBP)." };
+  if (!TIPOS_FOTO.includes(tipo as (typeof TIPOS_FOTO)[number])) return { error: "Elegí si es antes, después o progreso." };
+  if (formData.get("consentimiento") !== "on") return { error: "Falta confirmar que la persona autorizó la foto." };
+
+  const ruta = `${centroId}/${clienteId}/${crypto.randomUUID()}.${extension}`;
+  const { error: errorArchivo } = await supabase.storage.from("fotos").upload(ruta, archivo, { contentType: archivo.type });
+  if (errorArchivo) return { error: "No se pudo subir la foto. Probá de nuevo." };
+
+  const { error } = await supabase.from("fotos").insert({
+    centro_id: centroId,
+    cliente_id: clienteId,
+    tipo,
+    zona: texto(formData, "zona") || null,
+    ruta,
+    consentimiento: true,
+  });
+  if (error) {
+    await supabase.storage.from("fotos").remove([ruta]);
+    return { error: "No se pudo guardar la foto." };
+  }
+
+  revalidatePath(`/clientes/${clienteId}`);
+  return { ok: "Foto guardada." };
+}
+
+// Solo la dueña puede borrar una foto (por ejemplo, si la clienta lo pide).
+export async function borrarFoto(formData: FormData) {
+  const { supabase, rol } = await obtenerContexto();
+  if (rol !== "duena") return;
+  const fotoId = texto(formData, "foto_id");
+  const { data: foto } = await supabase.from("fotos").select("ruta, cliente_id").eq("id", fotoId).maybeSingle();
+  if (!foto) return;
+  const { error } = await supabase.from("fotos").delete().eq("id", fotoId);
+  if (error) return;
+  await supabase.storage.from("fotos").remove([foto.ruta]);
+  revalidatePath(`/clientes/${foto.cliente_id}`);
+}
