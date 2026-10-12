@@ -46,11 +46,15 @@ export function Importador({ tratamientos, zonas }: Catalogo) {
     if (!lectura) return;
     setError(undefined);
     startTransition(async () => {
-      const r = await importarPlanillas(lectura.datos);
-      if ("error" in r) setError(r.error);
-      else {
-        setResumen(r.resumen);
-        setLectura(null);
+      try {
+        const r = await importarPlanillas(lectura.datos);
+        if ("error" in r) setError(r.error);
+        else {
+          setResumen(r.resumen);
+          setLectura(null);
+        }
+      } catch {
+        setError("Se cortó la conexión con el servidor. Probá de nuevo: si algo llegó a importarse, no se va a duplicar.");
       }
     });
   }

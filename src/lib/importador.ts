@@ -50,6 +50,8 @@ function partesFecha(c: Celda): number[] | null {
     if (m) return [+m[3], +m[2], +m[1], +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0)];
   }
   if (!d || Number.isNaN(d.getTime())) return null;
+  // Excel guarda la hora como fracción de día: 09:30 puede volver como 09:29:59.999.
+  d = new Date(Math.round(d.getTime() / 1000) * 1000);
   return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()];
 }
 
