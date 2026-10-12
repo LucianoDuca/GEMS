@@ -10,7 +10,7 @@ export default async function EditarCliente({ params }: PageProps<"/clientes/[id
   const { supabase } = await obtenerContexto();
   const { data: cliente } = await supabase
     .from("clientes")
-    .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion, etiquetas")
+    .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion, etiquetas, sexo")
     .eq("id", id)
     .maybeSingle<Cliente>();
   if (!cliente) notFound();

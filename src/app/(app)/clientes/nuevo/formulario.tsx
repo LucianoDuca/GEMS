@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { HeartPulse, IdCard, Save } from "lucide-react";
 import { Boton, Campo, Input, MensajeError, Tarjeta } from "@/components/ui";
 import { CamposFicha } from "@/components/campos-ficha";
+import { CampoSexo } from "@/components/campo-sexo";
 import { crearCliente } from "../../acciones";
 
 export function FormularioCliente({ dni }: { dni?: string }) {
@@ -25,6 +26,9 @@ export function FormularioCliente({ dni }: { dni?: string }) {
           <Campo etiqueta="Teléfono">
             <Input name="telefono" type="tel" placeholder="261 555-0000" />
           </Campo>
+          <div className="sm:col-span-2">
+            <CampoSexo />
+          </div>
           <div className="sm:col-span-2">
             <Campo etiqueta="Dirección">
               <Input name="direccion" />

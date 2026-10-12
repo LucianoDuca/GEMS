@@ -32,6 +32,7 @@ export type Cliente = {
   telefono: string | null;
   direccion: string | null;
   etiquetas?: string[];
+  sexo?: "F" | "M" | null;
 };
 
 export type Ficha = {

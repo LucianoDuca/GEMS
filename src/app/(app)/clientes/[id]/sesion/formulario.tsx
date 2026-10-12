@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Banknote, Check, History, Layers, MapPinned, NotebookPen, RotateCcw, Save, ShieldAlert, Sparkles } from "lucide-react";
 import { Boton, Campo, Input, MensajeError, Select, Tarjeta, Textarea } from "@/components/ui";
-import { MapaCuerpo, zonaPorRegion } from "@/components/mapa-cuerpo";
+import { MapaCuerpo, zonaPorRegion, type Sexo } from "@/components/mapa-cuerpo";
 import { ESTILO_CATEGORIA } from "@/components/categoria";
 import { CATEGORIAS, MEDIOS_PAGO, type Categoria } from "@/lib/tipos";
 import { registrarSesion } from "../../../acciones";
@@ -18,6 +18,7 @@ export function FormularioSesion({
   categoriaInicial,
   ultimas,
   alertas,
+  sexo,
 }: {
   clienteId: string;
   tratamientos: Opcion[];
@@ -25,6 +26,7 @@ export function FormularioSesion({
   categoriaInicial: Categoria;
   ultimas: UltimaSesion[];
   alertas: string[];
+  sexo: Sexo | null;
 }) {
   const [estado, accion, enviando] = useActionState(registrarSesion.bind(null, clienteId), undefined);
   const [categoria, setCategoria] = useState<Categoria>(categoriaInicial);
@@ -170,7 +172,7 @@ export function FormularioSesion({
       {zonasVisibles.length > 0 && (
         <Tarjeta titulo="3. Zonas" icono={MapPinned} accion={zonasElegidas.size > 0 && <span className="text-sm font-semibold text-lila">{zonasElegidas.size} elegida{zonasElegidas.size === 1 ? "" : "s"}</span>}>
           {[...zonasElegidas].map((id) => <input key={id} type="hidden" name="zonas" value={id} />)}
-          <MapaCuerpo zonas={zonasVisibles} seleccionadas={zonasElegidas} alternar={(id) => setZonasElegidas((s) => alternar(s, id))} />
+          <MapaCuerpo zonas={zonasVisibles} seleccionadas={zonasElegidas} alternar={(id) => setZonasElegidas((s) => alternar(s, id))} sexo={sexo} />
           {zonasSueltas.length > 0 && (
             <div className="mt-4">
               {enElMapa.size > 0 && <p className="mb-2 text-sm text-suave">Otras zonas</p>}

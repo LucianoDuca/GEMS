@@ -9,6 +9,7 @@ import { MEDIOS_PAGO, CATEGORIAS, type EstadoFormulario } from "@/lib/tipos";
 const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? "").trim();
 const normalizarDni = (dni: string) => dni.replace(/[.\s-]/g, "");
 
+const leerSexo = (formData: FormData) => (["F", "M"].includes(texto(formData, "sexo")) ? texto(formData, "sexo") : null);
 const aviso = (texto: string) => `aviso=${encodeURIComponent(texto)}`;
 
 function leerFicha(formData: FormData) {
@@ -48,6 +49,8 @@ export async function crearCliente(_: EstadoFormulario, formData: FormData): Pro
     if (error.code === "23505") return { error: `Ya existe un cliente con DNI ${dni}.` };
     return { error: "No se pudo guardar. Probá de nuevo." };
   }
+  const sexo = leerSexo(formData);
+  if (sexo) await supabase.from("clientes").update({ sexo }).eq("id", id);
 
   redirect(`/clientes/${id}?${aviso(`Alta de ${nombre} lista`)}`);
 }
@@ -163,6 +166,7 @@ export async function actualizarCliente(clienteId: string, _: EstadoFormulario, 
       fecha_nacimiento: texto(formData, "nacimiento") || null,
       telefono: texto(formData, "telefono") || null,
       direccion: texto(formData, "direccion") || null,
+      sexo: leerSexo(formData),
       etiquetas: formData.getAll("etiquetas").map((e) => String(e).trim()).filter(Boolean).slice(0, 12),
     })
     .eq("id", clienteId);

@@ -20,7 +20,7 @@ export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/
   const { supabase } = await obtenerContexto();
 
   const [{ data: cliente }, { data: ficha }, { data: tratamientos }, { data: zonas }, { data: previas }] = await Promise.all([
-    supabase.from("clientes").select("nombre_completo, dni").eq("id", id).maybeSingle(),
+    supabase.from("clientes").select("nombre_completo, dni, sexo").eq("id", id).maybeSingle(),
     supabase.from("fichas_vigentes").select("alertas, respuestas").eq("cliente_id", id).maybeSingle(),
     supabase.from("tratamientos").select("id, nombre, categoria").eq("activo", true).order("orden"),
     supabase.from("zonas").select("id, nombre, abreviatura, categoria").eq("activo", true).order("orden"),
@@ -66,6 +66,7 @@ export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/
         categoriaInicial={ultimas[0]?.categoria ?? "depilacion"}
         ultimas={ultimas}
         alertas={alertas}
+        sexo={(cliente.sexo as "F" | "M" | null) ?? null}
       />
     </>
   );

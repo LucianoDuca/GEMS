@@ -166,5 +166,9 @@ espera((await n(ADMIN, "select count(*)::int n from fotos")) === 0, "GEMS no ve 
 espera((await como(OPERA, "delete from fotos")).affectedRows === 0, "una operadora no borra fotos");
 espera((await como(DUENA, "delete from fotos")).affectedRows === 1, "la dueña puede borrar una foto a pedido de la clienta");
 
+console.log("\nSexo del cliente");
+espera((await como(OPERA, "update clientes set sexo='F' where id=$1", [cli])).affectedRows === 1, "se puede cargar el sexo del cliente");
+await rechaza(como(OPERA, "update clientes set sexo='X' where id=$1", [cli]), "solo se acepta F o M");
+
 console.log(fallas ? `\n${fallas} prueba(s) fallaron` : "\nTodas las pruebas pasaron");
 process.exit(fallas ? 1 : 0);
