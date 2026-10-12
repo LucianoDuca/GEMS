@@ -170,5 +170,20 @@ console.log("\nSexo del cliente");
 espera((await como(OPERA, "update clientes set sexo='F' where id=$1", [cli])).affectedRows === 1, "se puede cargar el sexo del cliente");
 await rechaza(como(OPERA, "update clientes set sexo='X' where id=$1", [cli]), "solo se acepta F o M");
 
+console.log("\nAgenda de turnos");
+const turno = (uid, extra) => como(uid, `insert into turnos (centro_id, cliente_id, operadora_id, categoria, inicio, fin) values ('${C}',$1,$2,'depilacion',$3,$4) returning id`, extra);
+const t1 = (await turno(OPERA, [cli, OPERA, "2026-10-20T10:00:00-03:00", "2026-10-20T10:30:00-03:00"])).rows[0].id;
+ok("se da un turno");
+await rechaza(turno(OPERA, [cli, OPERA, "2026-10-20T10:15:00-03:00", "2026-10-20T10:45:00-03:00"]), "no se superponen dos turnos de la misma operadora");
+await turno(OPERA, [cli, OPERA, "2026-10-20T10:30:00-03:00", "2026-10-20T11:00:00-03:00"]); ok("un turno que empieza cuando termina el otro sí entra");
+await turno(OPERA, [cli, DUENA, "2026-10-20T10:00:00-03:00", "2026-10-20T10:30:00-03:00"]); ok("otra operadora puede tener turno a la misma hora");
+await como(OPERA, "update turnos set estado='cancelado' where id=$1", [t1]);
+await turno(OPERA, [cli, OPERA, "2026-10-20T10:00:00-03:00", "2026-10-20T10:20:00-03:00"]); ok("un turno cancelado libera el horario");
+await rechaza(como(OPERA, `insert into turnos (centro_id, categoria, inicio, fin) values ('${C}','reductor','2026-10-21T10:00:00-03:00','2026-10-21T11:00:00-03:00')`), "un turno necesita cliente o nombre");
+await como(OPERA, `insert into turnos (centro_id, nombre_provisorio, telefono_provisorio, categoria, inicio, fin) values ('${C}','Persona Nueva','261 000','reductor','2026-10-21T10:00:00-03:00','2026-10-21T11:00:00-03:00')`); ok("se puede dar turno a alguien sin alta");
+await rechaza(como(OPERA, `insert into turnos (centro_id, cliente_id, categoria, inicio, fin) values ('${C}',$1,'reductor','2026-10-21T11:00:00-03:00','2026-10-21T10:00:00-03:00')`, [cli]), "el fin tiene que ser después del inicio");
+espera((await n(OTRO, "select count(*)::int n from turnos")) === 0, "otro centro no ve la agenda ajena");
+espera((await como(OPERA, "delete from turnos")).affectedRows === 0, "los turnos no se borran (se cancelan)");
+
 console.log(fallas ? `\n${fallas} prueba(s) fallaron` : "\nTodas las pruebas pasaron");
 process.exit(fallas ? 1 : 0);

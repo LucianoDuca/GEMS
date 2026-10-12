@@ -5,7 +5,8 @@ import { FormularioCliente } from "./formulario";
 
 export default async function NuevoCliente({ searchParams }: PageProps<"/clientes/nuevo">) {
   await obtenerContexto();
-  const { dni } = await searchParams;
+  const { dni, nombre, telefono, turno } = await searchParams;
+  const valor = (v: unknown) => (typeof v === "string" ? v : undefined);
 
   return (
     <>
@@ -15,7 +16,7 @@ export default async function NuevoCliente({ searchParams }: PageProps<"/cliente
         descripcion="Completá los datos y la ficha de salud junto con la persona. Toma unos 3 minutos."
         volver={{ href: "/clientes", texto: "Clientes" }}
       />
-      <FormularioCliente dni={typeof dni === "string" ? dni : undefined} />
+      <FormularioCliente dni={valor(dni)} nombre={valor(nombre)} telefono={valor(telefono)} turnoId={valor(turno)} />
     </>
   );
 }

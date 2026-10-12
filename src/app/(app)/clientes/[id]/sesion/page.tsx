@@ -15,8 +15,10 @@ type SesionPrevia = {
   sesion_zonas: { zona_id: string }[];
 };
 
-export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/sesion">) {
+export default async function NuevaSesion({ params, searchParams }: PageProps<"/clientes/[id]/sesion">) {
   const { id } = await params;
+  const { turno: turnoParam } = await searchParams;
+  const turnoId = typeof turnoParam === "string" ? turnoParam : null;
   const { supabase } = await obtenerContexto();
 
   const [{ data: cliente }, { data: ficha }, { data: tratamientos }, { data: zonas }, { data: previas }] = await Promise.all([
@@ -34,6 +36,10 @@ export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/
       .returns<SesionPrevia[]>(),
   ]);
   if (!cliente) notFound();
+
+  const { data: turno } = turnoId
+    ? await supabase.from("turnos").select("id, categoria").eq("id", turnoId).maybeSingle()
+    : { data: null };
 
   const respuestas = (ficha?.respuestas ?? {}) as Record<string, { detalle?: string }>;
   const alertas = ((ficha?.alertas ?? []) as string[]).map((a) => `${textoAlerta(a)}${respuestas[a]?.detalle ? `: ${respuestas[a].detalle}` : ""}`);
@@ -63,7 +69,8 @@ export default async function NuevaSesion({ params }: PageProps<"/clientes/[id]/
         clienteId={id}
         tratamientos={(tratamientos ?? []) as { id: string; nombre: string; categoria: Categoria }[]}
         zonas={(zonas ?? []) as { id: string; nombre: string; abreviatura: string | null; categoria: Categoria }[]}
-        categoriaInicial={ultimas[0]?.categoria ?? "depilacion"}
+        categoriaInicial={(turno?.categoria as Categoria) ?? ultimas[0]?.categoria ?? "depilacion"}
+        turnoId={turno?.id ?? null}
         ultimas={ultimas}
         alertas={alertas}
         sexo={(cliente.sexo as "F" | "M" | null) ?? null}

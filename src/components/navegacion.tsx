@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Users, Wallet, Settings, CircleUserRound, Gem, LogOut } from "lucide-react";
+import { House, Users, Wallet, Settings, CircleUserRound, Gem, LogOut, CalendarDays } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type Item = { href: string; texto: string; icono: LucideIcon };
@@ -11,6 +11,7 @@ type Item = { href: string; texto: string; icono: LucideIcon };
 function itemsDe(rol: "duena" | "operadora") {
   const items: Item[] = [
     { href: "/", texto: "Inicio", icono: House },
+    { href: "/agenda", texto: "Agenda", icono: CalendarDays },
     { href: "/clientes", texto: "Clientes", icono: Users },
     { href: "/caja", texto: "Caja", icono: Wallet },
   ];
@@ -109,7 +110,7 @@ export function Navegacion({
       {/* Celular: barra inferior con botones grandes */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-borde/70 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-lg">
-          {[...items, { href: "/cuenta", texto: "Cuenta", icono: CircleUserRound }].map(({ href, texto, icono: Icono }) => {
+          {[...items.filter((i) => i.href !== "/ajustes"), { href: "/cuenta", texto: "Cuenta", icono: CircleUserRound }].map(({ href, texto, icono: Icono }) => {
             const esActivo = activo(pathname, href);
             return (
               <Link key={href} href={href} aria-current={esActivo ? "page" : undefined} className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold">

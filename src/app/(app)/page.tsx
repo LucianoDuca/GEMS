@@ -8,6 +8,7 @@ import { Accion, Avatar, Indicador, Tarjeta, Vacio } from "@/components/ui";
 import { EtiquetaCategoria } from "@/components/categoria";
 import { BuscadorClientes } from "@/components/buscador-clientes";
 import { ContactarHoy } from "@/components/contactar-hoy";
+import { TurnosHoy } from "@/components/turnos-hoy";
 
 function saludo() {
   const horaAR = Number(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "numeric", hourCycle: "h23" }).format(new Date()));
@@ -66,6 +67,10 @@ export default async function Inicio() {
         <Indicador icono={Wallet} etiqueta="Caja de hoy" valor={pesos(cajaHoy)} detalle={rol === "operadora" ? "Ingresos menos egresos" : undefined} />
         <Indicador icono={Sparkles} etiqueta="Clientes nuevos del mes" valor={nuevosMes ?? 0} />
       </div>
+
+      <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
+        <TurnosHoy supabase={supabase} hoy={hoy} />
+      </Suspense>
 
       <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
         <ContactarHoy supabase={supabase} centroNombre={centroNombre} hoy={hoy} />

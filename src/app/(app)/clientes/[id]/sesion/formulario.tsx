@@ -19,6 +19,7 @@ export function FormularioSesion({
   ultimas,
   alertas,
   sexo,
+  turnoId,
 }: {
   clienteId: string;
   tratamientos: Opcion[];
@@ -27,6 +28,7 @@ export function FormularioSesion({
   ultimas: UltimaSesion[];
   alertas: string[];
   sexo: Sexo | null;
+  turnoId: string | null;
 }) {
   const [estado, accion, enviando] = useActionState(registrarSesion.bind(null, clienteId), undefined);
   const [categoria, setCategoria] = useState<Categoria>(categoriaInicial);
@@ -84,6 +86,7 @@ export function FormularioSesion({
 
   return (
     <form action={accion} className="flex flex-col gap-6">
+      {turnoId && <input type="hidden" name="turno_id" value={turnoId} />}
       {/* Progreso */}
       <div className="sticky top-16 z-10 -mx-1 rounded-2xl bg-white/90 px-4 py-3 shadow-sm ring-1 ring-borde/70 backdrop-blur lg:top-4">
         <div className="mb-2 flex items-center justify-between text-xs font-semibold text-suave">

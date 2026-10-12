@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Tag, Cake, Images, MessageCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, ClipboardPlus, HeartPulse, History, IdCard, MapPin, PencilLine, Phone, Sparkles, Tag, Cake, Images, MessageCircle, Trash2, CalendarDays } from "lucide-react";
 import { obtenerContexto } from "@/lib/contexto";
 import { edad, fecha, fechaHora, pesos } from "@/lib/formato";
 import { PREGUNTAS, textoAlerta } from "@/lib/ficha-salud";
@@ -11,6 +11,7 @@ import { anularSesion, borrarFoto, subirFoto } from "../../acciones";
 import { Comparador, SubirFoto } from "@/components/fotos";
 import { ESTILO_CATEGORIA } from "@/components/categoria";
 import { diasEntre, enlaceWhatsapp, mensajes, proximaSesion } from "@/lib/fidelizacion";
+import { diaDe, horaDe, nombreDia } from "@/lib/agenda";
 
 type SesionHistorial = {
   id: string;
@@ -40,7 +41,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
   // Cada apertura de la ficha queda en la auditoría.
   await supabase.rpc("registrar_consulta_ficha", { p_cliente_id: id });
 
-  const [{ data: ficha }, { data: totales }, { data: sesiones }, { data: miembros }, { data: pagos }, { data: fotos }] = await Promise.all([
+  const [{ data: ficha }, { data: totales }, { data: sesiones }, { data: miembros }, { data: pagos }, { data: fotos }, { data: proximoTurno }] = await Promise.all([
     supabase.from("fichas_vigentes").select("id, version, respuestas, alertas, firmada_en, firma").eq("cliente_id", id).maybeSingle<Ficha>(),
     supabase.from("totales_tratamiento").select("tratamiento, categoria, sesiones, ultima_sesion").eq("cliente_id", id).order("sesiones", { ascending: false }),
     supabase
@@ -52,6 +53,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
     supabase.from("miembros").select("usuario_id, nombre").eq("centro_id", centroId),
     supabase.from("caja_movimientos").select("monto").eq("cliente_id", id).eq("tipo", "ingreso").eq("anulado", false),
     supabase.from("fotos").select("id, tipo, zona, ruta, tomada_en").eq("cliente_id", id).order("tomada_en", { ascending: false }).limit(60),
+    supabase.from("turnos").select("id, inicio, categoria").eq("cliente_id", id).in("estado", ["reservado", "confirmado"]).gte("inicio", new Date().toISOString()).order("inicio").limit(1).maybeSingle(),
   ]);
 
   // Enlaces temporales (1 hora) a las fotos privadas.
@@ -138,6 +140,26 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
           </div>
         )}
       </section>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {proximoTurno ? (
+          <Link href={`/agenda?dia=${diaDe(proximoTurno.inicio)}&turno=${proximoTurno.id}`} className="flex items-center gap-3 rounded-2xl border-2 border-lila/30 bg-lila-claro/50 p-4 hover:border-lila">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-lila text-white"><CalendarDays className="size-5" aria-hidden /></span>
+            <div className="min-w-0">
+              <div className="text-xs font-semibold uppercase tracking-wider text-lila">Próximo turno</div>
+              <div className="font-semibold first-letter:uppercase">{nombreDia(diaDe(proximoTurno.inicio), { weekday: "long", day: "numeric", month: "short" })} · {horaDe(proximoTurno.inicio)}</div>
+            </div>
+          </Link>
+        ) : (
+          <Link href={`/agenda?nuevo=1&cliente=${id}`} className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-lila/40 p-4 text-lila hover:bg-lila-claro">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-lila-claro"><CalendarPlus className="size-5" aria-hidden /></span>
+            <div>
+              <div className="font-semibold">Dar turno</div>
+              <div className="text-xs text-suave">No tiene turnos próximos</div>
+            </div>
+          </Link>
+        )}
+      </div>
 
       {proximas.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2">

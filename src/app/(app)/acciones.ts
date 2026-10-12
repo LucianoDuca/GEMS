@@ -52,6 +52,13 @@ export async function crearCliente(_: EstadoFormulario, formData: FormData): Pro
   const sexo = leerSexo(formData);
   if (sexo) await supabase.from("clientes").update({ sexo }).eq("id", id);
 
+  // Alta hecha desde un turno: el turno pasa a ser de este cliente y se sigue con la sesión.
+  const turnoId = texto(formData, "turno_id");
+  if (turnoId) {
+    await supabase.from("turnos").update({ cliente_id: id, nombre_provisorio: null, telefono_provisorio: null }).eq("id", turnoId);
+    redirect(`/clientes/${id}/sesion?turno=${turnoId}&${aviso(`Alta de ${nombre} lista. Ahora registrá la sesión`)}`);
+  }
+
   redirect(`/clientes/${id}?${aviso(`Alta de ${nombre} lista`)}`);
 }
 
@@ -116,6 +123,10 @@ export async function registrarSesion(clienteId: string, _: EstadoFormulario, fo
     });
     if (errorCaja) return { error: "La sesión se guardó, pero el cobro no. Cargalo desde Caja." };
   }
+
+  // Si la sesión viene de un turno, el turno queda atendido y unido a la sesión.
+  const turnoId = texto(formData, "turno_id");
+  if (turnoId) await supabase.from("turnos").update({ estado: "atendido", sesion_id: sesion.id, cliente_id: clienteId }).eq("id", turnoId);
 
   redirect(`/clientes/${clienteId}?${aviso(`Sesión ${sesion.numero} guardada${monto > 0 ? " y cobrada" : ""}`)}`);
 }

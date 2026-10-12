@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { Cake, Check, HeartHandshake, MessageCircle, PhoneOff } from "lucide-react";
+import { BellRing, Cake, Check, HeartHandshake, MessageCircle, PhoneOff } from "lucide-react";
+import { BotonRecordatorio } from "@/components/boton-recordatorio";
+import { horaDe, sumarDias } from "@/lib/agenda";
+import { rangoDia } from "@/lib/formato";
 import { Avatar, Tarjeta, Vacio } from "@/components/ui";
 import { ESTILO_CATEGORIA } from "@/components/categoria";
-import { diasEntre, enlaceWhatsapp, mensajes, proximaSesion, VENTANA_ATRASO } from "@/lib/fidelizacion";
+import { diasEntre, enlaceWhatsapp, mensajes, primerNombre, proximaSesion, VENTANA_ATRASO } from "@/lib/fidelizacion";
 import { etiquetaCategoria, type Categoria } from "@/lib/tipos";
 import { marcarContactado } from "@/app/(app)/acciones";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -50,7 +53,29 @@ export async function ContactarHoy({ supabase, centroNombre, hoy }: { supabase: 
     .filter((c) => !(ultimoContacto.get(`${c.id}:cumpleanos`) ?? "").startsWith(hoy.slice(0, 4)))
     .map((c) => ({ clienteId: c.id as string, edad: Number(hoy.slice(0, 4)) - Number((c.fecha_nacimiento as string).slice(0, 4)) }));
 
-  const ids = [...new Set([...tocaVolver.map((t) => t.clienteId), ...cumplen.map((c) => c.clienteId)])];
+  // Turnos de mañana sin recordatorio enviado.
+  const manana = sumarDias(hoy, 1);
+  const { data: turnosManana } = await supabase
+    .from("turnos")
+    .select("id, categoria, inicio, nombre_provisorio, telefono_provisorio, clientes (nombre_completo, telefono)")
+    .gte("inicio", rangoDia(manana).inicio)
+    .lt("inicio", rangoDia(manana).fin)
+    .in("estado", ["reservado", "confirmado"])
+    .is("recordatorio_enviado_en", null)
+    .order("inicio");
+  const recordatorios = (turnosManana ?? []).map((t) => {
+    const cliente = t.clientes as unknown as { nombre_completo: string; telefono: string | null } | null;
+    const nombre = cliente?.nombre_completo ?? t.nombre_provisorio ?? "Sin nombre";
+    const mensaje = `¡Hola ${primerNombre(nombre)}! Te recordamos tu turno de ${etiquetaCategoria(t.categoria as Categoria).toLowerCase()} en ${centroNombre} mañana a las ${horaDe(t.inicio)}. ¿Nos confirmás? 😊`;
+    return { id: t.id as string, nombre, hora: horaDe(t.inicio), enlace: enlaceWhatsapp(cliente?.telefono ?? t.telefono_provisorio, mensaje) };
+  });
+
+  // Tocá volver: si ya tiene un turno futuro, no hace falta escribirle.
+  const { data: conTurno } = await supabase.from("turnos").select("cliente_id").gte("inicio", ahora.toISOString()).in("estado", ["reservado", "confirmado"]);
+  const yaTienenTurno = new Set((conTurno ?? []).map((t) => t.cliente_id as string));
+  const tocaVolverSinTurno = tocaVolver.filter((t) => !yaTienenTurno.has(t.clienteId));
+
+  const ids = [...new Set([...tocaVolverSinTurno.map((t) => t.clienteId), ...cumplen.map((c) => c.clienteId)])];
   const { data: clientes } = ids.length
     ? await supabase.from("clientes").select("id, nombre_completo, telefono").in("id", ids)
     : { data: [] };
@@ -62,7 +87,7 @@ export async function ContactarHoy({ supabase, centroNombre, hoy }: { supabase: 
       if (!cl) return [];
       return [{ clienteId: cl.id, nombre: cl.nombre_completo, telefono: cl.telefono, motivo: "cumpleanos" as const, detalle: `Cumple ${c.edad} años hoy`, mensaje: mensajes.cumpleanos(cl.nombre_completo, centroNombre), orden: -1 }];
     }),
-    ...tocaVolver.flatMap((t) => {
+    ...tocaVolverSinTurno.flatMap((t) => {
       const cl = porId.get(t.clienteId);
       if (!cl) return [];
       const semanas = Math.max(1, Math.round(diasEntre(new Date(t.realizada), ahora) / 7));
@@ -76,8 +101,22 @@ export async function ContactarHoy({ supabase, centroNombre, hoy }: { supabase: 
   ].sort((a, b) => a.orden - b.orden);
 
   return (
-    <Tarjeta titulo="Para contactar hoy" icono={HeartHandshake} accion={pendientes.length > 0 && <span className="rounded-full bg-lila px-2.5 py-0.5 text-xs font-bold text-white">{pendientes.length}</span>}>
-      {pendientes.length === 0 ? (
+    <Tarjeta titulo="Para contactar hoy" icono={HeartHandshake} accion={pendientes.length + recordatorios.length > 0 && <span className="rounded-full bg-lila px-2.5 py-0.5 text-xs font-bold text-white">{pendientes.length + recordatorios.length}</span>}>
+      {recordatorios.length > 0 && (
+        <div className="mb-4 rounded-2xl bg-celeste-claro/60 p-3">
+          <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-celeste"><BellRing className="size-4" aria-hidden />Recordar los turnos de mañana</p>
+          <ul className="flex flex-col gap-2">
+            {recordatorios.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white px-3 py-2">
+                <span className="w-12 text-sm font-bold tabular-nums">{r.hora}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold">{r.nombre}</span>
+                {r.enlace ? <BotonRecordatorio turnoId={r.id} enlace={r.enlace} enviado={false} compacto /> : <span className="text-xs text-suave">Sin teléfono</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {pendientes.length === 0 && recordatorios.length === 0 ? (
         <Vacio icono={HeartHandshake}>Nadie para contactar hoy. Acá aparecen los clientes a los que les toca volver y los cumpleaños.</Vacio>
       ) : (
         <ul className="-mx-2 flex flex-col">
