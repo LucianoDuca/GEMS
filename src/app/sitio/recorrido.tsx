@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, PenLine } from "lucide-react";
 import { MapaCuerpo } from "@/components/mapa-cuerpo";
+import { IPhone } from "./dispositivos";
+import { AppCelular } from "./pantallas";
 
 // Recorrido por la app: a la izquierda el texto de cada paso; a la derecha (fija) la pantalla
 // que corresponde, que cambia a medida que se baja. En el celular, cada pantalla va con su texto.
@@ -60,40 +62,59 @@ export function Recorrido() {
             <span className={`font-serif text-6xl italic transition-colors duration-500 ${activo === i ? "text-lila" : "text-lila/25"}`}>{p.numero}</span>
             <h3 className="mt-4 max-w-md font-serif text-4xl leading-[1.05] tracking-tight sm:text-5xl">{p.titulo}</h3>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-suave">{p.texto}</p>
-            <div className="mt-10 lg:hidden">
-              <Pantalla paso={i} />
+            <div className="mt-12 lg:hidden">
+              <Pantalla paso={i} className="mx-auto w-[min(19rem,78%)]" />
             </div>
           </div>
         ))}
       </div>
       <div className="hidden lg:block">
-        <div className="sticky top-[12vh] h-[76vh]">
-          {PASOS.map((p, i) => (
-            <div key={p.numero} className={`absolute inset-0 transition-all duration-700 ease-out ${activo === i ? "translate-y-0 opacity-100" : i < activo ? "-translate-y-8 opacity-0" : "translate-y-8 opacity-0"}`} aria-hidden={activo !== i}>
-              <Pantalla paso={i} />
-            </div>
-          ))}
+        <div className="sticky top-[10vh] grid h-[80vh] place-items-center">
+          <div aria-hidden className="absolute size-[70%] rounded-full bg-lila/20 blur-[90px]" />
+          <IPhone style={{ width: "min(21rem, calc(76vh * 0.47))" }}>
+            <AppCelular activa={SECCION_APP[activo]}>
+              <div className="relative h-full">
+                {PASOS.map((p, i) => (
+                  <div
+                    key={p.numero}
+                    aria-hidden={activo !== i}
+                    className={`absolute inset-0 transition-all duration-500 ease-out ${activo === i ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
+                  >
+                    <Contenido paso={i} />
+                  </div>
+                ))}
+              </div>
+            </AppCelular>
+          </IPhone>
         </div>
       </div>
     </div>
   );
 }
 
-function Pantalla({ paso }: { paso: number }) {
+const SECCION_APP = ["Clientes", "Clientes", "Agenda", "Caja"] as const;
+
+function Pantalla({ paso, className }: { paso: number; className?: string }) {
   return (
-    <div className="flex h-full min-h-[26rem] items-center justify-center rounded-[2.5rem] bg-white p-5 shadow-[0_50px_100px_-40px_rgba(166,82,135,0.45)] sm:p-8">
-      {paso === 0 && <Ficha />}
-      {paso === 1 && <Sesion />}
-      {paso === 2 && <Agenda />}
-      {paso === 3 && <Caja />}
-    </div>
+    <IPhone className={className}>
+      <AppCelular activa={SECCION_APP[paso]}>
+        <Contenido paso={paso} />
+      </AppCelular>
+    </IPhone>
   );
+}
+
+function Contenido({ paso }: { paso: number }) {
+  if (paso === 0) return <Ficha />;
+  if (paso === 1) return <Sesion />;
+  if (paso === 2) return <Agenda />;
+  return <Caja />;
 }
 
 function Ficha() {
   const preguntas: [string, boolean][] = [["¿Está embarazada o en lactancia?", false], ["¿Tiene marcapasos o implantes metálicos?", true], ["¿Toma medicación fotosensibilizante?", false], ["¿Tiene la piel sensible?", true]];
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full">
       <p className="mb-4 text-sm font-semibold text-lila">Ficha de salud · paso 2 de 3</p>
       <div className="flex flex-col gap-2.5">
         {preguntas.map(([p, si]) => (
@@ -119,7 +140,7 @@ function Ficha() {
 function Sesion() {
   const [elegidas, setElegidas] = useState<Set<string>>(new Set(["Axilas", "Bozo"]));
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full">
       <MapaCuerpo
         zonas={ZONAS_DEMO}
         seleccionadas={elegidas}
@@ -147,7 +168,7 @@ function Agenda() {
     { nombre: "Sofía", turnos: [{ h: "10:30", n: "Florencia D.", c: "bg-rose-500", alto: 2, desde: 1 }, { h: "12:30", n: "Camila R.", c: "bg-celeste", alto: 1, desde: 5 }] },
   ];
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full">
       <div className="mb-4 flex items-baseline justify-between">
         <p className="font-serif text-3xl">Hoy</p>
         <p className="text-sm text-suave">4 turnos · 2 operadoras</p>
@@ -185,7 +206,7 @@ function Caja() {
     { nombre: "Insumos", total: 310_000, ancho: 13, color: "bg-alerta" },
   ];
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full">
       <p className="text-sm font-semibold text-suave">Octubre 2026</p>
       <p className="mt-1 font-serif text-5xl">$ 1.980.000</p>
       <p className="text-sm text-emerald-700">Resultado del mes</p>

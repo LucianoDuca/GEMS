@@ -120,12 +120,12 @@ export function Encabezado({ demo }: { demo: string }) {
 
   return (
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${claro ? "bg-white/90 shadow-[0_1px_0_rgba(31,26,36,0.06)] backdrop-blur-xl" : "bg-transparent"}`}>
-      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center gap-8 px-5 sm:px-8">
+      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center gap-6 px-5 sm:px-8 xl:gap-8">
         <Link href="/sitio" aria-label="GEMS Gestión" className="relative h-7 w-32 shrink-0">
           <Image src="/gems-logo-blanco.png" alt="GEMS" width={1200} height={276} priority className={`absolute inset-0 h-auto w-32 transition-opacity duration-500 ${claro ? "opacity-0" : "opacity-100"}`} />
           <Image src="/gems-logo.png" alt="" width={1200} height={276} priority className={`absolute inset-0 h-auto w-32 transition-opacity duration-500 ${claro ? "opacity-100" : "opacity-0"}`} />
         </Link>
-        <nav className={`hidden items-center gap-7 text-[0.9rem] font-medium lg:flex ${claro ? "text-tinta/70" : "text-white/75"}`}>
+        <nav className={`hidden items-center gap-5 whitespace-nowrap text-[0.9rem] font-medium lg:flex xl:gap-7 ${claro ? "text-tinta/70" : "text-white/75"}`}>
           {enlaces.map((e) => (
             <a key={e.href} href={e.href} className={`subrayado transition-colors ${claro ? "hover:text-lila" : "hover:text-white"}`}>{e.texto}</a>
           ))}

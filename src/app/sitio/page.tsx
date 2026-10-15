@@ -8,6 +8,8 @@ import { Contador, Encabezado, Inclinar, Revelar } from "./animaciones";
 import { ComparadorPlanilla } from "./comparador";
 import { Recorrido } from "./recorrido";
 import { ChatWhatsApp } from "./chat";
+import { IPhone, MacBook } from "./dispositivos";
+import { PantallaCliente, PantallaEscritorio } from "./pantallas";
 
 export const metadata: Metadata = {
   title: "GEMS Gestión · El sistema para centros de estética",
@@ -75,7 +77,7 @@ export default function Sitio() {
                 </a>
               </div>
             </div>
-            <Inclinar className="aparecer-suave" >
+            <Inclinar className="aparecer-suave">
               <Maqueta />
             </Inclinar>
           </div>
@@ -418,57 +420,25 @@ function ColumnaPie({ titulo, enlaces }: { titulo: string; enlaces: [string, str
   );
 }
 
-// Pantalla de la app dibujada para la portada (datos de ejemplo).
+// Portada: la app en una MacBook y la ficha de una clienta en un iPhone, con una notificación de WhatsApp.
 function Maqueta() {
   return (
-    <div aria-hidden className="relative mx-auto w-full max-w-xl">
-      <div className="rounded-[1.75rem] bg-white/10 p-2 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.7)] backdrop-blur">
-        <div className="flex overflow-hidden rounded-[1.35rem] bg-[#faf8fb] text-tinta">
-          <div className="hidden w-32 shrink-0 flex-col gap-1.5 bg-gradient-to-b from-lila to-lila-oscuro p-3.5 sm:flex">
-            <Image src="/gems-logo-blanco.png" alt="" width={1200} height={276} className="mb-3 h-auto w-[4.5rem]" />
-            {["Inicio", "Agenda", "Clientes", "Caja", "Ajustes"].map((t, i) => (
-              <span key={t} className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${i === 0 ? "bg-white text-lila" : "text-white/80"}`}>{t}</span>
-            ))}
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-3 p-4">
-            <div className="rounded-2xl bg-gradient-to-br from-lila to-lila-oscuro p-4 text-white">
-              <div className="text-[10px] text-white/70">Jueves, 15 de octubre</div>
-              <div className="font-serif text-xl">Buen día, Marina</div>
-              <div className="mt-2.5 flex h-8 items-center rounded-lg bg-white/95 px-3 text-[10px] text-suave">DNI o nombre…</div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[["Sesiones hoy", "12"], ["Caja hoy", "$ 186.500"], ["Nuevas", "9"]].map(([e, v]) => (
-                <div key={e} className="rounded-xl bg-white p-2.5 shadow-sm">
-                  <div className="text-[9px] text-suave">{e}</div>
-                  <div className="text-sm font-bold">{v}</div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-xl bg-white p-3 shadow-sm">
-              <div className="mb-2 text-[10px] font-semibold">Turnos de hoy</div>
-              {[["10:00", "Valentina P.", "Depilación"], ["11:00", "Julieta S.", "Reductor"], ["12:30", "Florencia D.", "Facial"]].map(([h, n, c], i) => (
-                <div key={h} className={`flex items-center gap-2 rounded-lg px-1.5 py-1.5 text-[10px] ${i === 0 ? "bg-lila-claro" : ""}`}>
-                  <span className="w-8 font-bold">{h}</span>
-                  <span className="size-5 rounded-full bg-gradient-to-br from-lila-claro to-celeste-claro" />
-                  <span className="flex-1 font-semibold">{n}</span>
-                  <span className="text-suave">{c}</span>
-                  {i === 0 && <span className="rounded-md bg-lila px-1.5 py-0.5 text-[9px] font-semibold text-white">Atender</span>}
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="relative mx-auto w-full max-w-[40rem] pb-[16%] lg:max-w-none">
+      <MacBook className="w-full">
+        <PantallaEscritorio />
+      </MacBook>
+      <IPhone className="absolute bottom-0 right-[1%] w-[26%] sm:-right-[2%] lg:-left-[6%] lg:right-auto">
+        <PantallaCliente />
+      </IPhone>
+      <div aria-hidden className="maqueta-flotar-2 absolute left-[2%] top-[52%] w-[64%] max-w-[19rem] sm:w-[46%] lg:left-[16%] lg:top-[50%] lg:w-[44%]">
+        <div className="flex items-start gap-3 rounded-[1.4rem] bg-white/85 p-3 text-tinta shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+          <span className="grid size-9 shrink-0 place-items-center rounded-[0.6rem] bg-[#25d366] text-white"><MessageCircle className="size-5" /></span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="flex justify-between text-[11px] text-suave"><span className="tracking-wide uppercase">WhatsApp</span><span>ahora</span></span>
+            <span className="mt-0.5 block text-sm font-semibold">Lucía García</span>
+            <span className="block truncate text-sm text-tinta/80">¡Sí, ahí estoy mañana! 🙌</span>
+          </span>
         </div>
-      </div>
-      <div className="maqueta-flotar-2 absolute -bottom-8 -left-4 flex items-center gap-3 rounded-2xl bg-white p-3 pr-5 text-tinta shadow-2xl sm:-left-10">
-        <span className="grid size-10 place-items-center rounded-full bg-[#25d366] text-white"><MessageCircle className="size-5" /></span>
-        <span>
-          <span className="block text-xs text-suave">Recordatorio enviado</span>
-          <span className="block text-sm font-semibold">Lucía · mañana 15:00</span>
-        </span>
-      </div>
-      <div className="maqueta-flotar absolute -right-2 -top-6 rounded-2xl bg-white px-4 py-3 text-tinta shadow-2xl sm:-right-6 lg:-right-2">
-        <span className="block text-[10px] text-suave">Caja de octubre</span>
-        <span className="block font-serif text-2xl">$ 1.980.000</span>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, ChevronLeft, Mic } from "lucide-react";
+import { BarraEstado, IPhone } from "./dispositivos";
 
 // Conversación de WhatsApp que se escribe sola cuando aparece en pantalla.
 const MENSAJES = [
@@ -42,32 +43,43 @@ export function ChatWhatsApp() {
   }, []);
 
   return (
-    <div ref={ref} className="mx-auto w-full max-w-[22rem] overflow-hidden rounded-[2.75rem] bg-tinta p-2.5 shadow-[0_60px_120px_-40px_rgba(0,0,0,0.6)]">
-      <div className="overflow-hidden rounded-[2.25rem] bg-[#efe7de] text-[#111b21]">
-        <div className="flex items-center gap-3 bg-[#075e54] px-4 pb-3 pt-6 text-white">
-          <span className="grid size-9 place-items-center rounded-full bg-white/20 text-sm font-bold">LG</span>
-          <div className="leading-tight">
-            <div className="text-sm font-semibold">Lucía García</div>
-            <div className="text-[11px] text-white/70">{escribiendo && mostrados % 2 === 1 ? "escribiendo…" : "en línea"}</div>
+    <div ref={ref}>
+      <IPhone className="mx-auto w-[min(20rem,82vw)]" fondo="#efe7de">
+        <div className="flex h-full flex-col bg-[#efe7de] text-[#111b21]">
+          <div className="bg-[#075e54] pb-3 text-white">
+            <BarraEstado clara />
+            <div className="flex items-center gap-3 px-4 pt-1">
+              <ChevronLeft className="size-7" aria-hidden />
+              <span className="grid size-10 place-items-center rounded-full bg-white/20 text-sm font-bold">LG</span>
+              <div className="leading-tight">
+                <div className="text-[17px] font-semibold">Lucía García</div>
+                <div className="text-[13px] text-white/70">{escribiendo && mostrados % 2 === 1 ? "escribiendo…" : "en línea"}</div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col justify-end gap-2 p-3">
+            <span className="mb-2 self-center rounded-lg bg-white/80 px-3 py-1 text-[12px] text-[#54656f] shadow-sm">HOY</span>
+            {MENSAJES.slice(0, mostrados).map((m, i) => (
+              <div key={i} className={`burbuja max-w-[80%] rounded-2xl px-3 py-2 text-[15px] leading-snug shadow-sm ${m.de === "centro" ? "self-end rounded-tr-sm bg-[#d9fdd3]" : "self-start rounded-tl-sm bg-white"}`}>
+                {m.texto}
+                <span className="ml-2 inline-flex translate-y-0.5 items-center gap-0.5 text-[11px] text-[#667781]">
+                  {m.hora}
+                  {m.de === "centro" && <CheckCheck className="size-4 text-[#53bdeb]" aria-hidden />}
+                </span>
+              </div>
+            ))}
+            {escribiendo && (
+              <div className={`flex gap-1 rounded-2xl px-3.5 py-3.5 shadow-sm ${mostrados % 2 === 0 ? "self-end bg-[#d9fdd3]" : "self-start bg-white"}`}>
+                {[0, 1, 2].map((p) => <span key={p} className="punto-escribiendo size-2 rounded-full bg-[#667781]" style={{ animationDelay: `${p * 150}ms` }} />)}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 bg-[#f6f6f6] px-3 pb-9 pt-2">
+            <span className="flex-1 rounded-full bg-white px-4 py-2.5 text-[15px] text-[#8696a0]">Mensaje</span>
+            <span className="grid size-10 place-items-center rounded-full bg-[#00a884] text-white"><Mic className="size-5" aria-hidden /></span>
           </div>
         </div>
-        <div className="flex min-h-[23rem] flex-col justify-end gap-2 p-3">
-          {MENSAJES.slice(0, mostrados).map((m, i) => (
-            <div key={i} className={`burbuja max-w-[82%] rounded-2xl px-3 py-2 text-[13px] leading-snug shadow-sm ${m.de === "centro" ? "self-end rounded-tr-sm bg-[#d9fdd3]" : "self-start rounded-tl-sm bg-white"}`}>
-              {m.texto}
-              <span className="ml-2 inline-flex translate-y-0.5 items-center gap-0.5 text-[10px] text-[#667781]">
-                {m.hora}
-                {m.de === "centro" && <CheckCheck className="size-3.5 text-[#53bdeb]" aria-hidden />}
-              </span>
-            </div>
-          ))}
-          {escribiendo && (
-            <div className={`flex gap-1 rounded-2xl px-3 py-3 shadow-sm ${mostrados % 2 === 0 ? "self-end bg-[#d9fdd3]" : "self-start bg-white"}`}>
-              {[0, 1, 2].map((p) => <span key={p} className="punto-escribiendo size-1.5 rounded-full bg-[#667781]" style={{ animationDelay: `${p * 150}ms` }} />)}
-            </div>
-          )}
-        </div>
-      </div>
+      </IPhone>
     </div>
   );
 }
