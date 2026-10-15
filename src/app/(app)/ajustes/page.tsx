@@ -9,7 +9,7 @@ import { FormularioConcepto, FormularioItem, FormularioMiembro } from "./formula
 
 type Miembro = { usuario_id: string; nombre: string; email: string | null; rol: Rol; activo: boolean };
 type Concepto = { id: string; nombre: string; tipo: "ingreso" | "egreso"; activo: boolean; sistema: boolean };
-type Item = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria; activo: boolean };
+type Item = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria; activo: boolean; precio?: number | null; duracion_min?: number | null };
 
 export default async function Ajustes() {
   const { supabase, rol, usuarioId, centroId } = await obtenerContexto();
@@ -17,7 +17,7 @@ export default async function Ajustes() {
 
   const [{ data: miembros }, { data: tratamientos }, { data: zonas }, { data: conceptos }] = await Promise.all([
     supabase.from("miembros").select("usuario_id, nombre, email, rol, activo").eq("centro_id", centroId).order("activo", { ascending: false }).order("nombre").returns<Miembro[]>(),
-    supabase.from("tratamientos").select("id, nombre, categoria, activo").eq("centro_id", centroId).order("categoria").order("orden").returns<Item[]>(),
+    supabase.from("tratamientos").select("id, nombre, categoria, activo, precio, duracion_min").eq("centro_id", centroId).order("categoria").order("orden").returns<Item[]>(),
     supabase.from("zonas").select("id, nombre, abreviatura, categoria, activo").eq("centro_id", centroId).order("categoria").order("orden").returns<Item[]>(),
     supabase.from("conceptos_caja").select("id, nombre, tipo, activo, sistema").eq("centro_id", centroId).order("nombre").returns<Concepto[]>(),
   ]);
@@ -62,7 +62,7 @@ export default async function Ajustes() {
         <FormularioMiembro />
       </Tarjeta>
 
-      <Catalogo titulo="Tratamientos" catalogo="tratamientos" items={tratamientos ?? []} />
+      <Catalogo titulo="Servicios y precios" catalogo="tratamientos" items={tratamientos ?? []} />
       <Catalogo titulo="Zonas" catalogo="zonas" items={zonas ?? []} />
       <ConceptosCaja conceptos={conceptos ?? []} />
     </div>
@@ -74,6 +74,11 @@ function Catalogo({ titulo, catalogo, items }: { titulo: string; catalogo: "trat
 
   return (
     <Tarjeta titulo={titulo} icono={catalogo === "zonas" ? MapPinned : Sparkles}>
+      {catalogo === "tratamientos" && (
+        <p className="-mt-2 mb-5 text-sm text-suave">
+          Lo que ofrecés, agrupado por rubro. Para sumar un rubro nuevo (por ejemplo Masajes), agregá un servicio en ese rubro. El precio se sugiere al cobrar y la duración, al dar turnos.
+        </p>
+      )}
       {categorias.length === 0 && <Vacio>Todavía no hay {titulo.toLowerCase()}.</Vacio>}
       {categorias.map((c) => (
         <section key={c.valor} className="mb-5">
@@ -87,6 +92,12 @@ function Catalogo({ titulo, catalogo, items }: { titulo: string; catalogo: "trat
                   <input name="nombre" defaultValue={i.nombre} aria-label="Nombre" required className={estiloFila + " min-w-0 flex-1"} />
                   {catalogo === "zonas" && (
                     <input name="abreviatura" defaultValue={i.abreviatura ?? ""} aria-label="Abreviatura" placeholder="Abrev." className={estiloFila + " w-20"} />
+                  )}
+                  {catalogo === "tratamientos" && (
+                    <>
+                      <input name="precio" defaultValue={i.precio != null ? String(Number(i.precio)) : ""} inputMode="decimal" aria-label="Precio" placeholder="$ Precio" className={estiloFila + " w-24"} />
+                      <input name="duracion" defaultValue={i.duracion_min ?? ""} inputMode="numeric" aria-label="Duración en minutos" placeholder="Min." className={estiloFila + " w-16"} />
+                    </>
                   )}
                   <button type="submit" className="rounded-lg px-3 text-sm font-semibold text-suave hover:bg-lila-claro hover:text-lila">Guardar</button>
                 </form>

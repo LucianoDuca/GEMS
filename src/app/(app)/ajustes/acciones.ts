@@ -65,6 +65,17 @@ export async function cambiarEstadoMiembro(formData: FormData) {
 type Catalogo = "tratamientos" | "zonas";
 const leerCatalogo = (formData: FormData): Catalogo => (texto(formData, "catalogo") === "zonas" ? "zonas" : "tratamientos");
 
+// Precio y duración de un servicio (opcionales). Devuelve un error si vienen mal.
+function precioYDuracion(formData: FormData): { precio: number | null; duracion_min: number | null } | { error: string } {
+  const p = texto(formData, "precio").replace(/\./g, "").replace(",", ".");
+  const d = texto(formData, "duracion");
+  const precio = p ? Number(p) : null;
+  const duracion = d ? Number(d) : null;
+  if (precio !== null && !(precio >= 0)) return { error: "El precio no es válido." };
+  if (duracion !== null && !(Number.isInteger(duracion) && duracion >= 5 && duracion <= 480)) return { error: "La duración va de 5 a 480 minutos." };
+  return { precio, duracion_min: duracion };
+}
+
 export async function agregarItem(_: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
   const { supabase, centroId } = await contextoDuena();
   const catalogo = leerCatalogo(formData);
@@ -84,6 +95,11 @@ export async function agregarItem(_: EstadoFormulario, formData: FormData): Prom
 
   const fila: Record<string, unknown> = { centro_id: centroId, nombre, categoria, orden: (ultimo?.orden ?? 0) + 1 };
   if (catalogo === "zonas") fila.abreviatura = texto(formData, "abreviatura").toUpperCase() || null;
+  if (catalogo === "tratamientos") {
+    const extra = precioYDuracion(formData);
+    if ("error" in extra) return extra;
+    Object.assign(fila, extra);
+  }
 
   const { error } = await supabase.from(catalogo).insert(fila);
   if (error) {
@@ -103,6 +119,11 @@ export async function editarItem(formData: FormData) {
 
   const cambios: Record<string, unknown> = { nombre };
   if (catalogo === "zonas") cambios.abreviatura = texto(formData, "abreviatura").toUpperCase() || null;
+  if (catalogo === "tratamientos") {
+    const extra = precioYDuracion(formData);
+    if ("error" in extra) return;
+    Object.assign(cambios, extra);
+  }
 
   await supabase.from(catalogo).update(cambios).eq("id", texto(formData, "id"));
   revalidatePath("/ajustes");

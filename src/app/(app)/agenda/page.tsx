@@ -27,6 +27,8 @@ type Turno = {
   estado: EstadoTurno;
   notas: string | null;
   recordatorio_enviado_en: string | null;
+  tratamiento_id: string | null;
+  tratamientos: { nombre: string } | null;
   clientes: { id: string; nombre_completo: string; telefono: string | null } | null;
 };
 
@@ -52,20 +54,22 @@ export default async function Agenda({ searchParams }: PageProps<"/agenda">) {
   const [{ data }, { data: miembros }, { data: tratamientos }] = await Promise.all([
     supabase
       .from("turnos")
-      .select("id, cliente_id, nombre_provisorio, telefono_provisorio, operadora_id, categoria, inicio, fin, estado, notas, recordatorio_enviado_en, clientes (id, nombre_completo, telefono)")
+      .select("id, cliente_id, nombre_provisorio, telefono_provisorio, operadora_id, categoria, inicio, fin, estado, notas, recordatorio_enviado_en, tratamiento_id, tratamientos (nombre), clientes (id, nombre_completo, telefono)")
+      .eq("centro_id", centroId)
       .gte("inicio", rangoDia(desde).inicio)
       .lt("inicio", rangoDia(hasta).inicio)
       .order("inicio")
       .returns<Turno[]>(),
     supabase.from("miembros").select("usuario_id, nombre").eq("centro_id", centroId).eq("activo", true).order("nombre"),
-    supabase.from("tratamientos").select("categoria").eq("activo", true),
+    supabase.from("tratamientos").select("id, nombre, categoria, duracion_min").eq("centro_id", centroId).eq("activo", true).order("orden"),
   ]);
 
   const turnos = data ?? [];
   const activos = turnos.filter((t) => t.estado !== "cancelado");
   const operadoras = (miembros ?? []).map((m) => ({ id: m.usuario_id as string, nombre: m.nombre as string }));
   const nombreOperadora = new Map(operadoras.map((o) => [o.id, o.nombre]));
-  const categorias = [...new Set((tratamientos ?? []).map((t) => t.categoria as Categoria))];
+  const servicios = (tratamientos ?? []) as { id: string; nombre: string; categoria: Categoria; duracion_min: number | null }[];
+  const categorias = [...new Set(servicios.map((t) => t.categoria))];
 
   // Columnas del día: cada operadora + "Sin asignar" si hace falta.
   const columnas = [
@@ -81,7 +85,7 @@ export default async function Agenda({ searchParams }: PageProps<"/agenda">) {
   if (param("nuevo") || turnoEditado) {
     let clienteInicial: ValoresTurno["cliente"] = null;
     if (param("cliente")) {
-      const { data: c } = await supabase.from("clientes").select("id, nombre_completo").eq("id", param("cliente")!).maybeSingle();
+      const { data: c } = await supabase.from("clientes").select("id, nombre_completo").eq("id", param("cliente")!).eq("centro_id", centroId).maybeSingle();
       if (c) clienteInicial = { id: c.id, nombre: c.nombre_completo };
     }
     const categoria = (param("categoria") as Categoria) ?? categorias[0] ?? "depilacion";
@@ -91,6 +95,7 @@ export default async function Agenda({ searchParams }: PageProps<"/agenda">) {
           hora: horaDe(turnoEditado.inicio),
           duracion: duracionMinutos(turnoEditado.inicio, turnoEditado.fin),
           categoria: turnoEditado.categoria,
+          servicioId: turnoEditado.tratamiento_id ?? "",
           operadoraId: turnoEditado.operadora_id ?? "",
           cliente: turnoEditado.clientes ? { id: turnoEditado.clientes.id, nombre: turnoEditado.clientes.nombre_completo } : null,
           nombreProvisorio: turnoEditado.nombre_provisorio ?? "",
@@ -102,6 +107,7 @@ export default async function Agenda({ searchParams }: PageProps<"/agenda">) {
           hora: param("hora") ?? "10:00",
           duracion: DURACION_SUGERIDA[categoria],
           categoria,
+          servicioId: "",
           operadoraId: param("operadora") ?? "",
           cliente: clienteInicial,
           nombreProvisorio: "",
@@ -200,7 +206,7 @@ export default async function Agenda({ searchParams }: PageProps<"/agenda">) {
               <Link href={url()} scroll={false} className="grid size-9 place-items-center rounded-xl text-suave hover:bg-fondo" aria-label="Cerrar"><X className="size-5" aria-hidden /></Link>
             </div>
             {valoresNuevo ? (
-              <FormularioTurno turnoId={turnoEditado?.id ?? null} valores={valoresNuevo} operadoras={operadoras} categorias={categorias.length ? categorias : ["depilacion"]} />
+              <FormularioTurno turnoId={turnoEditado?.id ?? null} valores={valoresNuevo} operadoras={operadoras} categorias={categorias.length ? categorias : ["depilacion"]} servicios={servicios} />
             ) : (
               turnoAbierto && <DetalleTurno turno={turnoAbierto} operadora={turnoAbierto.operadora_id ? nombreOperadora.get(turnoAbierto.operadora_id) : undefined} centro={centroNombre} url={url} />
             )}
@@ -223,7 +229,7 @@ function FilaTurno({ turno: t, href, operadora }: { turno: Turno; href: string; 
         <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${chip}`}><Icono className="size-5" aria-hidden /></span>
         <div className="min-w-0 flex-1">
           <div className="line-clamp-2 font-semibold leading-snug">{nombreTurno(t)}</div>
-          <div className="truncate text-xs text-suave">{etiquetaCategoria(t.categoria)}{operadora ? ` · ${operadora}` : ""}</div>
+          <div className="truncate text-xs text-suave">{t.tratamientos?.nombre ?? etiquetaCategoria(t.categoria)}{operadora ? ` · ${operadora}` : ""}</div>
         </div>
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${ESTADOS_TURNO[t.estado].chip}`}>{ESTADOS_TURNO[t.estado].texto}</span>
       </Link>
@@ -359,7 +365,7 @@ function DetalleTurno({ turno: t, operadora, centro, url }: { turno: Turno; oper
         </div>
       </div>
 
-      <div className="flex items-center gap-2"><EtiquetaCategoria categoria={t.categoria} /></div>
+      <div className="flex flex-wrap items-center gap-2"><EtiquetaCategoria categoria={t.categoria} />{t.tratamientos && <span className="text-sm font-semibold">{t.tratamientos.nombre}</span>}</div>
       {t.notas && <p className="flex items-start gap-2 rounded-xl bg-fondo p-3 text-sm"><StickyNote className="mt-0.5 size-4 shrink-0 text-lila" aria-hidden />{t.notas}</p>}
 
       {activo && (

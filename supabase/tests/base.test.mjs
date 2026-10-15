@@ -224,5 +224,14 @@ await como(ADMIN, `insert into cobros_gems (centro_id, concepto, periodo, monto,
 espera((await db.query("select estado::text e from centros where id=$1", [c3])).rows[0].e === "suspendido", "una suspensión manual de GEMS no se levanta sola con un pago");
 await como(ADMIN, `update centros set estado='activo' where id='${c3}'`);
 
+console.log("\nServicios con precio y duración");
+const masaje = (await como(DUENA, `insert into tratamientos (centro_id, nombre, categoria, precio, duracion_min) values ('${C}','Descontracturante','masajes',18000,50) returning id`)).rows[0].id;
+ok("se crea un servicio en un rubro nuevo, con precio y duración");
+await rechaza(como(DUENA, `insert into tratamientos (centro_id, nombre, categoria, duracion_min) values ('${C}','Eterno','masajes',2)`), "la duración tiene que ser razonable");
+await como(OPERA, `insert into turnos (centro_id, cliente_id, categoria, tratamiento_id, inicio, fin) values ('${C}',$1,'masajes',$2,'2026-10-22T10:00:00-03:00','2026-10-22T10:50:00-03:00')`, [cli, masaje]);
+ok("un turno puede indicar el servicio");
+const ajeno = (await db.query(`insert into tratamientos (centro_id, nombre, categoria) values ('${C2}','Ajeno','masajes') returning id`)).rows[0].id;
+await rechaza(como(OPERA, `insert into turnos (centro_id, cliente_id, categoria, tratamiento_id, inicio, fin) values ('${C}',$1,'masajes',$2,'2026-10-22T12:00:00-03:00','2026-10-22T12:30:00-03:00')`, [cli, ajeno]), "no se puede usar un servicio de otro centro");
+
 console.log(fallas ? `\n${fallas} prueba(s) fallaron` : "\nTodas las pruebas pasaron");
 process.exit(fallas ? 1 : 0);

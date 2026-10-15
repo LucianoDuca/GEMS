@@ -9,7 +9,7 @@ import { CATEGORIAS, MEDIOS_PAGO, type Categoria } from "@/lib/tipos";
 import { registrarSesion } from "../../../acciones";
 import { Formulario } from "@/components/formulario";
 
-type Opcion = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria };
+type Opcion = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria; precio?: number | null };
 export type UltimaSesion = { categoria: Categoria; fecha: string; tratamientos: string[]; zonas: string[]; potencia: string | null };
 
 export function FormularioSesion({
@@ -17,6 +17,7 @@ export function FormularioSesion({
   tratamientos,
   zonas,
   categoriaInicial,
+  tratamientoInicial = null,
   ultimas,
   alertas,
   sexo,
@@ -26,6 +27,7 @@ export function FormularioSesion({
   tratamientos: Opcion[];
   zonas: Opcion[];
   categoriaInicial: Categoria;
+  tratamientoInicial?: string | null;
   ultimas: UltimaSesion[];
   alertas: string[];
   sexo: Sexo | null;
@@ -37,12 +39,25 @@ export function FormularioSesion({
   const [zonasElegidas, setZonasElegidas] = useState<Set<string>>(new Set());
   const [potencia, setPotencia] = useState("");
   const [alertasRevisadas, setAlertasRevisadas] = useState(alertas.length === 0);
-  const [monto, setMonto] = useState("");
+  // El monto se completa solo con la lista de precios hasta que la persona lo cambie a mano.
+  const [montoTocado, setMontoTocado] = useState(false);
+  const [monto, setMonto] = useState(() => sugerirMonto(inicialTratamientos(categoriaInicial)));
   const [repetida, setRepetida] = useState(false);
 
   function inicialTratamientos(c: Categoria) {
     const deLaCategoria = tratamientos.filter((t) => t.categoria === c);
+    if (tratamientoInicial && deLaCategoria.some((t) => t.id === tratamientoInicial)) return new Set([tratamientoInicial]);
     return new Set(deLaCategoria.length === 1 ? [deLaCategoria[0].id] : []);
+  }
+
+  function sugerirMonto(ids: Set<string>) {
+    const total = tratamientos.filter((t) => ids.has(t.id)).reduce((s, t) => s + Number(t.precio ?? 0), 0);
+    return total > 0 ? String(total) : "";
+  }
+
+  function elegirTratamientos(ids: Set<string>) {
+    setTratElegidos(ids);
+    if (!montoTocado) setMonto(sugerirMonto(ids));
   }
 
   const tratamientosVisibles = tratamientos.filter((t) => t.categoria === categoria);
@@ -53,7 +68,7 @@ export function FormularioSesion({
 
   function cambiarCategoria(c: Categoria) {
     setCategoria(c);
-    setTratElegidos(inicialTratamientos(c));
+    elegirTratamientos(inicialTratamientos(c));
     setZonasElegidas(new Set());
     setRepetida(false);
   }
@@ -70,7 +85,7 @@ export function FormularioSesion({
     if (!ultima) return;
     const idsTrat = new Set(tratamientosVisibles.map((t) => t.id));
     const idsZonas = new Set(zonasVisibles.map((z) => z.id));
-    setTratElegidos(new Set(ultima.tratamientos.filter((id) => idsTrat.has(id))));
+    elegirTratamientos(new Set(ultima.tratamientos.filter((id) => idsTrat.has(id))));
     setZonasElegidas(new Set(ultima.zonas.filter((id) => idsZonas.has(id))));
     setPotencia(ultima.potencia ?? "");
     setRepetida(true);
@@ -165,7 +180,7 @@ export function FormularioSesion({
         <div className="flex flex-wrap gap-2">
           {tratamientosVisibles.map((t) => (
             <label key={t.id} className={chip(tratElegidos.has(t.id))}>
-              <input type="checkbox" name="tratamientos" value={t.id} checked={tratElegidos.has(t.id)} onChange={() => setTratElegidos((s) => alternar(s, t.id))} className="sr-only" />
+              <input type="checkbox" name="tratamientos" value={t.id} checked={tratElegidos.has(t.id)} onChange={() => elegirTratamientos(alternar(tratElegidos, t.id))} className="sr-only" />
               {tratElegidos.has(t.id) && <Check className="size-4" aria-hidden />}
               {t.nombre}
             </label>
@@ -226,8 +241,8 @@ export function FormularioSesion({
 
       <Tarjeta titulo="Cobro (opcional)" icono={Banknote}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Monto en pesos">
-            <Input name="monto" value={monto} onChange={(e) => setMonto(e.target.value)} inputMode="decimal" placeholder="0" />
+          <Campo etiqueta="Monto en pesos" ayuda={!montoTocado && monto ? "Según la lista de precios. Podés cambiarlo." : undefined}>
+            <Input name="monto" value={monto} onChange={(e) => { setMonto(e.target.value); setMontoTocado(true); }} inputMode="decimal" placeholder="0" />
           </Campo>
           <Campo etiqueta="Medio de pago">
             <Select name="medio" defaultValue="">

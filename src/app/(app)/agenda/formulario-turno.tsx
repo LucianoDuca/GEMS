@@ -15,6 +15,7 @@ export type ValoresTurno = {
   hora: string;
   duracion: number;
   categoria: Categoria;
+  servicioId: string;
   operadoraId: string;
   cliente: { id: string; nombre: string } | null;
   nombreProvisorio: string;
@@ -27,15 +28,18 @@ export function FormularioTurno({
   valores,
   operadoras,
   categorias,
+  servicios,
 }: {
   turnoId: string | null;
   valores: ValoresTurno;
   operadoras: { id: string; nombre: string }[];
   categorias: Categoria[];
+  servicios: { id: string; nombre: string; categoria: Categoria; duracion_min: number | null }[];
 }) {
   const [estado, accion, enviando] = useActionState(guardarTurno.bind(null, turnoId), undefined);
   const [categoria, setCategoria] = useState<Categoria>(valores.categoria);
   const [duracion, setDuracion] = useState(valores.duracion);
+  const [servicioId, setServicioId] = useState(valores.servicioId);
   const [cliente, setCliente] = useState(valores.cliente);
   const [personaNueva, setPersonaNueva] = useState(!valores.cliente && Boolean(valores.nombreProvisorio));
   // Campos controlados: React vacía el formulario después de cada envío y, si hubo error, se perderían.
@@ -123,7 +127,7 @@ export function FormularioTurno({
                 key={c.valor}
                 type="button"
                 aria-pressed={activa}
-                onClick={() => { setCategoria(c.valor); if (!turnoId) setDuracion(DURACION_SUGERIDA[c.valor]); }}
+                onClick={() => { setCategoria(c.valor); setServicioId(""); if (!turnoId) setDuracion(DURACION_SUGERIDA[c.valor]); }}
                 className={`flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition ${activa ? `${solido} border-transparent shadow` : "border-borde bg-white hover:border-lila"}`}
               >
                 <Icono className="size-4" aria-hidden />
@@ -133,6 +137,25 @@ export function FormularioTurno({
           })}
         </div>
       </div>
+
+      {servicios.some((x) => x.categoria === categoria) && (
+        <Campo etiqueta="Servicio (opcional)">
+          <Select
+            name="tratamiento_id"
+            value={servicioId}
+            onChange={(e) => {
+              setServicioId(e.target.value);
+              const elegido = servicios.find((x) => x.id === e.target.value);
+              if (elegido?.duracion_min) setDuracion(elegido.duracion_min);
+            }}
+          >
+            <option value="">Sin especificar</option>
+            {servicios.filter((x) => x.categoria === categoria).map((x) => (
+              <option key={x.id} value={x.id}>{x.nombre}{x.duracion_min ? ` · ${x.duracion_min} min` : ""}</option>
+            ))}
+          </Select>
+        </Campo>
+      )}
 
       {/* ¿Cuándo? */}
       <div className="grid grid-cols-2 gap-3">
@@ -146,7 +169,7 @@ export function FormularioTurno({
         </Campo>
         <Campo etiqueta="Duración">
           <Select name="duracion" value={duracion} onChange={(e) => setDuracion(Number(e.target.value))}>
-            {DURACIONES.map((d) => <option key={d} value={d}>{d < 60 ? `${d} min` : `${Math.floor(d / 60)} h${d % 60 ? ` ${d % 60} min` : ""}`}</option>)}
+            {[...new Set([...DURACIONES, duracion])].sort((a, b) => a - b).map((d) => <option key={d} value={d}>{d < 60 ? `${d} min` : `${Math.floor(d / 60)} h${d % 60 ? ` ${d % 60} min` : ""}`}</option>)}
           </Select>
         </Campo>
         <Campo etiqueta="Operadora">

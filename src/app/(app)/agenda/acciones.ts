@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { obtenerContexto } from "@/lib/contexto";
-import { aIso, DURACIONES, type EstadoTurno } from "@/lib/agenda";
+import { aIso, type EstadoTurno } from "@/lib/agenda";
 import { CATEGORIAS, type EstadoFormulario } from "@/lib/tipos";
 
 const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? "").trim();
@@ -19,7 +19,7 @@ function leerTurno(formData: FormData) {
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return { error: "Elegí el día." };
   if (!/^\d{2}:\d{2}$/.test(hora)) return { error: "Elegí la hora." };
-  if (!DURACIONES.includes(duracion)) return { error: "Elegí cuánto dura." };
+  if (!(Number.isInteger(duracion) && duracion >= 5 && duracion <= 480)) return { error: "Elegí cuánto dura." };
   if (!CATEGORIAS.some((c) => c.valor === categoria)) return { error: "Elegí el tipo de tratamiento." };
   if (!clienteId && !nombre) return { error: "Elegí un cliente o escribí el nombre de la persona." };
 
@@ -33,6 +33,7 @@ function leerTurno(formData: FormData) {
       telefono_provisorio: clienteId ? null : texto(formData, "telefono_provisorio") || null,
       operadora_id: texto(formData, "operadora_id") || null,
       categoria,
+      tratamiento_id: texto(formData, "tratamiento_id") || null,
       inicio,
       fin,
       notas: texto(formData, "notas") || null,
@@ -52,7 +53,7 @@ export async function guardarTurno(turnoId: string | null, _: EstadoFormulario, 
   if ("error" in leido) return { error: leido.error };
 
   const { error } = turnoId
-    ? await supabase.from("turnos").update(leido.datos).eq("id", turnoId)
+    ? await supabase.from("turnos").update(leido.datos).eq("id", turnoId).eq("centro_id", centroId)
     : await supabase.from("turnos").insert({ ...leido.datos, centro_id: centroId });
   if (error) return { error: mensajeError(error.message) };
 

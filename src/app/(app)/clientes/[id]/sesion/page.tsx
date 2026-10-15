@@ -19,16 +19,17 @@ export default async function NuevaSesion({ params, searchParams }: PageProps<"/
   const { id } = await params;
   const { turno: turnoParam } = await searchParams;
   const turnoId = typeof turnoParam === "string" ? turnoParam : null;
-  const { supabase } = await obtenerContexto();
+  const { supabase, centroId } = await obtenerContexto();
 
   const [{ data: cliente }, { data: ficha }, { data: tratamientos }, { data: zonas }, { data: previas }] = await Promise.all([
     supabase.from("clientes").select("nombre_completo, dni, sexo").eq("id", id).maybeSingle(),
     supabase.from("fichas_vigentes").select("alertas, respuestas").eq("cliente_id", id).maybeSingle(),
-    supabase.from("tratamientos").select("id, nombre, categoria").eq("activo", true).order("orden"),
-    supabase.from("zonas").select("id, nombre, abreviatura, categoria").eq("activo", true).order("orden"),
+    supabase.from("tratamientos").select("id, nombre, categoria, precio").eq("centro_id", centroId).eq("activo", true).order("orden"),
+    supabase.from("zonas").select("id, nombre, abreviatura, categoria").eq("centro_id", centroId).eq("activo", true).order("orden"),
     supabase
       .from("sesiones")
       .select("categoria, realizada_en, potencia, sesion_tratamientos (tratamiento_id), sesion_zonas (zona_id)")
+      .eq("centro_id", centroId)
       .eq("cliente_id", id)
       .eq("anulada", false)
       .order("realizada_en", { ascending: false })
@@ -38,7 +39,7 @@ export default async function NuevaSesion({ params, searchParams }: PageProps<"/
   if (!cliente) notFound();
 
   const { data: turno } = turnoId
-    ? await supabase.from("turnos").select("id, categoria").eq("id", turnoId).maybeSingle()
+    ? await supabase.from("turnos").select("id, categoria, tratamiento_id").eq("id", turnoId).eq("centro_id", centroId).maybeSingle()
     : { data: null };
 
   const respuestas = (ficha?.respuestas ?? {}) as Record<string, { detalle?: string }>;
@@ -67,7 +68,8 @@ export default async function NuevaSesion({ params, searchParams }: PageProps<"/
       />
       <FormularioSesion
         clienteId={id}
-        tratamientos={(tratamientos ?? []) as { id: string; nombre: string; categoria: Categoria }[]}
+        tratamientos={(tratamientos ?? []) as { id: string; nombre: string; categoria: Categoria; precio: number | null }[]}
+        tratamientoInicial={(turno?.tratamiento_id as string | null) ?? null}
         zonas={(zonas ?? []) as { id: string; nombre: string; abreviatura: string | null; categoria: Categoria }[]}
         categoriaInicial={(turno?.categoria as Categoria) ?? ultimas[0]?.categoria ?? "depilacion"}
         turnoId={turno?.id ?? null}

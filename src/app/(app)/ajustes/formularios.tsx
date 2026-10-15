@@ -70,10 +70,16 @@ export function FormularioItem({ catalogo }: { catalogo: "tratamientos" | "zonas
     <Formulario ref={form} action={despachar} className="flex flex-col gap-3">
       <input type="hidden" name="catalogo" value={catalogo} />
       <div className="flex flex-wrap gap-2">
-        <Input name="nombre" placeholder={catalogo === "zonas" ? "Nueva zona" : "Nuevo tratamiento"} aria-label="Nombre" required className="min-w-0 flex-[2_1_12rem]" />
+        <Input name="nombre" placeholder={catalogo === "zonas" ? "Nueva zona" : "Nuevo servicio"} aria-label="Nombre" required className="min-w-0 flex-[2_1_12rem]" />
         {catalogo === "zonas" && <Input name="abreviatura" placeholder="Abrev." aria-label="Abreviatura" className="flex-[0_1_6rem]" />}
+        {catalogo === "tratamientos" && (
+          <>
+            <Input name="precio" inputMode="decimal" placeholder="$ Precio" aria-label="Precio (opcional)" className="flex-[0_1_7rem]" />
+            <Input name="duracion" inputMode="numeric" placeholder="Minutos" aria-label="Duración en minutos (opcional)" className="flex-[0_1_6rem]" />
+          </>
+        )}
         <Select name="categoria" defaultValue="" aria-label="Categoría" required className="flex-[1_1_9rem]">
-          <option value="" disabled>Categoría…</option>
+          <option value="" disabled>Rubro…</option>
           {CATEGORIAS.map((c) => <option key={c.valor} value={c.valor}>{c.etiqueta}</option>)}
         </Select>
         <Boton type="submit" disabled={enviando}>Agregar</Boton>

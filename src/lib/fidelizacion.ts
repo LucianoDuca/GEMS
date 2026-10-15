@@ -5,6 +5,10 @@ export const INTERVALO_DIAS: Record<Categoria, number> = {
   depilacion: 35,
   reductor: 7,
   facial: 30,
+  corporal: 14,
+  masajes: 14,
+  cejas_pestanas: 21,
+  manos_pies: 21,
   otro: 30,
 };
 

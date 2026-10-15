@@ -1,12 +1,16 @@
 export type Rol = "duena" | "operadora";
-export type Categoria = "depilacion" | "reductor" | "facial" | "otro";
+export type Categoria = "depilacion" | "reductor" | "facial" | "corporal" | "masajes" | "cejas_pestanas" | "manos_pies" | "otro";
 export type MedioPago = "efectivo" | "transferencia" | "debito" | "credito" | "mercadopago" | "otro";
 
 export const CATEGORIAS: { valor: Categoria; etiqueta: string }[] = [
   { valor: "depilacion", etiqueta: "Depilación" },
   { valor: "reductor", etiqueta: "Reductor" },
   { valor: "facial", etiqueta: "Facial" },
-  { valor: "otro", etiqueta: "Otro" },
+  { valor: "corporal", etiqueta: "Corporal" },
+  { valor: "masajes", etiqueta: "Masajes" },
+  { valor: "cejas_pestanas", etiqueta: "Cejas y pestañas" },
+  { valor: "manos_pies", etiqueta: "Manos y pies" },
+  { valor: "otro", etiqueta: "Otros" },
 ];
 
 export const MEDIOS_PAGO: { valor: MedioPago; etiqueta: string }[] = [

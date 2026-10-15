@@ -5,7 +5,7 @@ export const HORA_INICIO = 8;
 export const HORA_FIN = 21;
 export const PASO_MINUTOS = 30;
 
-export const DURACION_SUGERIDA: Record<Categoria, number> = { depilacion: 30, reductor: 60, facial: 60, otro: 30 };
+export const DURACION_SUGERIDA: Record<Categoria, number> = { depilacion: 30, reductor: 60, facial: 60, corporal: 60, masajes: 60, cejas_pestanas: 45, manos_pies: 60, otro: 30 };
 export const DURACIONES = [15, 20, 30, 45, 60, 75, 90, 120];
 
 export type EstadoTurno = "reservado" | "confirmado" | "atendido" | "ausente" | "cancelado";
