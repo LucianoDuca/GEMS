@@ -78,10 +78,17 @@ export async function actualizarEstetica(centroId: string, _: EstadoFormulario, 
   const precio = monto(formData, "precio");
   if (!nombre) return { error: "Falta el nombre." };
   if (!(precio >= 0)) return { error: "El precio no es válido." };
+  const vencimiento = Number(texto(formData, "dia_vencimiento") || 10);
+  const gracia = Number(texto(formData, "dias_gracia") || 5);
+  if (!(vencimiento >= 1 && vencimiento <= 28)) return { error: "El día de vencimiento va del 1 al 28." };
+  if (!(gracia >= 0 && gracia <= 30)) return { error: "Los días de gracia van de 0 a 30." };
 
   const { error } = await supabase
     .from("centros")
     .update({
+      dia_vencimiento: vencimiento,
+      dias_gracia: gracia,
+      corte_automatico: formData.get("corte_automatico") === "on",
       nombre,
       ciudad: texto(formData, "ciudad") || null,
       plan: texto(formData, "plan") || "Básico",

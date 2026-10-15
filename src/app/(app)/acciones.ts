@@ -148,13 +148,19 @@ export async function registrarMovimiento(_: EstadoFormulario, formData: FormDat
   const tipo = texto(formData, "tipo") === "egreso" ? "egreso" : "ingreso";
   const monto = Number(texto(formData, "monto").replace(/\./g, "").replace(",", "."));
   const medio = texto(formData, "medio");
-  const concepto = texto(formData, "concepto");
+  const conceptoId = texto(formData, "concepto_id");
+  const detalle = texto(formData, "detalle").slice(0, 200);
 
   if (!(monto > 0)) return { error: "El monto no es válido." };
   if (!MEDIOS_PAGO.some((m) => m.valor === medio)) return { error: "Elegí el medio de pago." };
-  if (!concepto) return { error: "Escribí un concepto." };
+  if (!conceptoId) return { error: "Elegí el concepto." };
 
-  const { error } = await supabase.from("caja_movimientos").insert({ centro_id: centroId, tipo, monto, medio, concepto });
+  const { data: concepto } = await supabase.from("conceptos_caja").select("nombre").eq("id", conceptoId).eq("centro_id", centroId).maybeSingle();
+  if (!concepto) return { error: "Elegí el concepto." };
+
+  const { error } = await supabase
+    .from("caja_movimientos")
+    .insert({ centro_id: centroId, tipo, monto, medio, concepto_id: conceptoId, concepto: detalle || concepto.nombre });
   if (error) return { error: "No se pudo registrar el movimiento." };
 
   revalidatePath("/caja");

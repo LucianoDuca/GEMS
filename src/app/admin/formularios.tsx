@@ -106,6 +106,19 @@ export function FormularioDatosEstetica({ centro }: { centro: Centro }) {
         <Campo etiqueta="Dirección">
           <Input name="direccion" defaultValue={centro.direccion ?? ""} />
         </Campo>
+        <Campo etiqueta="Vence el día" ayuda="De cada mes (1 a 28)">
+          <Input name="dia_vencimiento" type="number" min={1} max={28} defaultValue={centro.dia_vencimiento ?? 10} required />
+        </Campo>
+        <Campo etiqueta="Días de gracia" ayuda="Después del vencimiento, antes de cortar">
+          <Input name="dias_gracia" type="number" min={0} max={30} defaultValue={centro.dias_gracia ?? 5} required />
+        </Campo>
+        <label className="flex items-start gap-3 rounded-xl bg-fondo p-3 text-sm sm:col-span-2">
+          <input type="checkbox" name="corte_automatico" defaultChecked={centro.corte_automatico ?? true} className="mt-0.5 size-5 accent-lila" />
+          <span>
+            <span className="font-semibold">Cortar el servicio si no paga</span>
+            <span className="block text-xs text-suave">Si la mensualidad del mes no figura como pagada al terminar los días de gracia, la estética se suspende sola. Al registrar el pago, vuelve sola.</span>
+          </span>
+        </label>
         <div className="sm:col-span-2">
           <Campo etiqueta="Notas internas" ayuda="Solo las ve GEMS">
             <Textarea name="notas" defaultValue={centro.notas ?? ""} />

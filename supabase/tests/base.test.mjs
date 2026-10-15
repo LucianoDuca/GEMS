@@ -185,5 +185,44 @@ await rechaza(como(OPERA, `insert into turnos (centro_id, cliente_id, categoria,
 espera((await n(OTRO, "select count(*)::int n from turnos")) === 0, "otro centro no ve la agenda ajena");
 espera((await como(OPERA, "delete from turnos")).affectedRows === 0, "los turnos no se borran (se cancelan)");
 
+console.log("\nCaja: conceptos y resúmenes");
+espera((await n(DUENA, "select count(*)::int n from conceptos_caja where tipo='egreso'")) >= 8, "cada centro arranca con conceptos de gasto (sueldos, impuestos…)");
+espera((await db.query("select count(*)::int n from conceptos_caja where centro_id=$1", [c3])).rows[0].n >= 12, "un centro nuevo también recibe los conceptos");
+const sueldos = (await como(DUENA, "select id from conceptos_caja where nombre='Sueldos'")).rows[0].id;
+await como(DUENA, `insert into caja_movimientos (centro_id, tipo, monto, medio, concepto, concepto_id, registrado_en) values ('${C}','egreso',100000,'transferencia','Sueldo Opera',$1,'2026-09-05T12:00:00-03:00')`, [sueldos]);
+ok("se registra un gasto con concepto");
+await rechaza(como(DUENA, `insert into caja_movimientos (centro_id, tipo, monto, medio, concepto, concepto_id) values ('${C}','ingreso',10,'efectivo','x',$1)`, [sueldos]), "un ingreso no puede usar un concepto de gasto");
+await como(OPERA, `insert into caja_movimientos (centro_id, tipo, monto, medio, concepto, registrado_en) values ('${C}','ingreso',5000,'efectivo','Crema','2026-09-06T12:00:00-03:00')`);
+espera((await como(DUENA, "select c.nombre n from caja_movimientos m join conceptos_caja c on c.id=m.concepto_id where m.concepto='Crema'")).rows[0].n === "Otros ingresos", "sin concepto elegido va a «Otros ingresos»");
+const res = (await como(DUENA, `select * from resumen_caja('${C}','2026-09-01T00:00:00-03:00','2026-10-01T00:00:00-03:00')`)).rows;
+espera(res.length === 2 && res.some((r) => r.concepto === "Sueldos" && Number(r.total) === 100000), "el resumen del mes agrupa por concepto");
+const serie = (await como(DUENA, `select * from serie_caja('${C}','2026-09-01T00:00:00-03:00','2026-10-01T00:00:00-03:00',false)`)).rows;
+espera(serie.length === 2 && Number(serie[0].egresos) === 100000, "la serie por día separa ingresos y egresos");
+espera((await como(OTRO, `select * from resumen_caja('${C}','2026-09-01T00:00:00-03:00','2026-10-01T00:00:00-03:00')`)).rows.length === 0, "otro centro no ve el resumen ajeno");
+await rechaza(como(OPERA, `insert into conceptos_caja (centro_id, tipo, nombre) values ('${C}','egreso','Limpieza')`), "una operadora no crea conceptos");
+await como(DUENA, `insert into conceptos_caja (centro_id, tipo, nombre) values ('${C}','egreso','Limpieza')`); ok("la dueña crea conceptos");
+await rechaza(como(DUENA, `insert into conceptos_caja (centro_id, tipo, nombre, sistema) values ('${C}','ingreso','Truco',true)`), "no se pueden crear conceptos del sistema");
+
+console.log("\nMensualidad y corte automático");
+// Lo que corre pg_cron: sin usuario logueado.
+const sistema = async (sql) => { await db.query("select set_config('request.jwt.claim.sub','',false)"); return db.query(sql); };
+const dia = (n) => `(date_trunc('month', current_date) + interval '${n} days')::date`; // día n+1 del mes en curso
+await db.query(`update centros set creado_en = now() - interval '90 days' where id=$1`, [c3]);
+espera((await como(NUEVA, `select * from mi_situacion_pago('${c3}')`)).rows[0]?.aplica === true, "la dueña ve el vencimiento de su mensualidad");
+espera((await como(OPERA, `select * from mi_situacion_pago('${c3}')`)).rows.length === 0, "otra persona no ve la situación de pago ajena");
+espera((await sistema(`select aplicar_cortes(${dia(13)}) n`)).rows[0].n === 0, "antes de terminar los días de gracia no se corta");
+espera((await sistema(`select aplicar_cortes(${dia(16)}) n`)).rows[0].n === 1, "pasada la gracia sin pago, el centro se suspende solo");
+espera((await n(NUEVA, "select count(*)::int n from tratamientos")) === 0, "el centro suspendido pierde el acceso");
+espera((await como(NUEVA, "select * from mi_centro_suspendido()")).rows[0]?.por_pago === true, "la persona ve que está suspendido por falta de pago");
+espera((await sistema(`select aplicar_cortes(${dia(16)}) n`)).rows[0].n === 0, "los centros sin precio o ya suspendidos no se tocan");
+await como(ADMIN, `insert into cobros_gems (centro_id, concepto, periodo, monto, medio) values ('${c3}','Mensualidad',date_trunc('month', current_date)::date,45000,'transferencia')`);
+espera((await db.query("select estado::text e, suspendido_por_pago p from centros where id=$1", [c3])).rows[0].e === "activo", "al registrar el pago se reactiva solo");
+espera((await sistema(`select aplicar_cortes(${dia(20)}) n`)).rows[0].n === 0, "con la mensualidad pagada no se corta");
+await rechaza(como(NUEVA, `update centros set dia_vencimiento=28 where id='${c3}'`), "la dueña no cambia su vencimiento");
+await como(ADMIN, `update centros set estado='suspendido' where id='${c3}'`);
+await como(ADMIN, `insert into cobros_gems (centro_id, concepto, periodo, monto, medio) values ('${c3}','Mensualidad',date_trunc('month', current_date)::date,1,'efectivo')`);
+espera((await db.query("select estado::text e from centros where id=$1", [c3])).rows[0].e === "suspendido", "una suspensión manual de GEMS no se levanta sola con un pago");
+await como(ADMIN, `update centros set estado='activo' where id='${c3}'`);
+
 console.log(fallas ? `\n${fallas} prueba(s) fallaron` : "\nTodas las pruebas pasaron");
 process.exit(fallas ? 1 : 0);

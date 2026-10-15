@@ -117,6 +117,37 @@ export async function cambiarEstadoItem(formData: FormData) {
   revalidatePath("/ajustes");
 }
 
+// ───────── Conceptos de caja ─────────
+
+export async function agregarConcepto(_: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const { supabase, centroId } = await contextoDuena();
+  const nombre = texto(formData, "nombre").slice(0, 60);
+  const tipo = texto(formData, "tipo") === "ingreso" ? "ingreso" : "egreso";
+  if (!nombre) return { error: "Falta el nombre." };
+
+  const { error } = await supabase.from("conceptos_caja").insert({ centro_id: centroId, tipo, nombre });
+  if (error) {
+    if (error.code === "23505") return { error: `Ya existe “${nombre}”.` };
+    return { error: "No se pudo agregar." };
+  }
+  revalidatePath("/ajustes");
+  return { ok: `Se agregó “${nombre}”.` };
+}
+
+export async function editarConcepto(formData: FormData) {
+  const { supabase, centroId } = await contextoDuena();
+  const nombre = texto(formData, "nombre").slice(0, 60);
+  if (!nombre) return;
+  await supabase.from("conceptos_caja").update({ nombre }).eq("id", texto(formData, "id")).eq("centro_id", centroId).eq("sistema", false);
+  revalidatePath("/ajustes");
+}
+
+export async function cambiarEstadoConcepto(formData: FormData) {
+  const { supabase, centroId } = await contextoDuena();
+  await supabase.from("conceptos_caja").update({ activo: formData.get("activo") === "true" }).eq("id", texto(formData, "id")).eq("centro_id", centroId);
+  revalidatePath("/ajustes");
+}
+
 // La dueña le pone una contraseña nueva a alguien de SU equipo (no a sí misma: eso va por Mi cuenta).
 export async function restablecerClave(_: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
   const { supabase, centroId, usuarioId } = await contextoDuena();

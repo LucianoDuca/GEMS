@@ -13,6 +13,10 @@ export type Centro = {
   direccion: string | null;
   notas: string | null;
   creado_en: string;
+  dia_vencimiento?: number;
+  dias_gracia?: number;
+  corte_automatico?: boolean;
+  suspendido_por_pago?: boolean;
 };
 
 export type UsoCentro = { centro_id: string; clientes: number; sesiones_mes: number; equipo: number; ultima_actividad: string | null };

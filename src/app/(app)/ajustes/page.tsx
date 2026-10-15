@@ -1,23 +1,25 @@
-import { FileSpreadsheet, MapPinned, Settings, Sparkles, UsersRound } from "lucide-react";
+import { FileSpreadsheet, MapPinned, ReceiptText, Settings, Sparkles, UsersRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import { obtenerContexto } from "@/lib/contexto";
 import { CATEGORIAS, type Categoria, type Rol } from "@/lib/tipos";
 import { BotonLink, Encabezado, Tarjeta, Vacio } from "@/components/ui";
-import { cambiarEstadoItem, cambiarEstadoMiembro, editarItem, restablecerClave } from "./acciones";
+import { cambiarEstadoConcepto, cambiarEstadoItem, cambiarEstadoMiembro, editarConcepto, editarItem, restablecerClave } from "./acciones";
 import { FormularioClave } from "@/components/formulario-clave";
-import { FormularioItem, FormularioMiembro } from "./formularios";
+import { FormularioConcepto, FormularioItem, FormularioMiembro } from "./formularios";
 
 type Miembro = { usuario_id: string; nombre: string; email: string | null; rol: Rol; activo: boolean };
+type Concepto = { id: string; nombre: string; tipo: "ingreso" | "egreso"; activo: boolean; sistema: boolean };
 type Item = { id: string; nombre: string; abreviatura?: string | null; categoria: Categoria; activo: boolean };
 
 export default async function Ajustes() {
   const { supabase, rol, usuarioId, centroId } = await obtenerContexto();
   if (rol !== "duena") redirect("/");
 
-  const [{ data: miembros }, { data: tratamientos }, { data: zonas }] = await Promise.all([
+  const [{ data: miembros }, { data: tratamientos }, { data: zonas }, { data: conceptos }] = await Promise.all([
     supabase.from("miembros").select("usuario_id, nombre, email, rol, activo").eq("centro_id", centroId).order("activo", { ascending: false }).order("nombre").returns<Miembro[]>(),
-    supabase.from("tratamientos").select("id, nombre, categoria, activo").order("categoria").order("orden").returns<Item[]>(),
-    supabase.from("zonas").select("id, nombre, abreviatura, categoria, activo").order("categoria").order("orden").returns<Item[]>(),
+    supabase.from("tratamientos").select("id, nombre, categoria, activo").eq("centro_id", centroId).order("categoria").order("orden").returns<Item[]>(),
+    supabase.from("zonas").select("id, nombre, abreviatura, categoria, activo").eq("centro_id", centroId).order("categoria").order("orden").returns<Item[]>(),
+    supabase.from("conceptos_caja").select("id, nombre, tipo, activo, sistema").eq("centro_id", centroId).order("nombre").returns<Concepto[]>(),
   ]);
 
   return (
@@ -62,6 +64,7 @@ export default async function Ajustes() {
 
       <Catalogo titulo="Tratamientos" catalogo="tratamientos" items={tratamientos ?? []} />
       <Catalogo titulo="Zonas" catalogo="zonas" items={zonas ?? []} />
+      <ConceptosCaja conceptos={conceptos ?? []} />
     </div>
   );
 }
@@ -99,6 +102,40 @@ function Catalogo({ titulo, catalogo, items }: { titulo: string; catalogo: "trat
         </section>
       ))}
       <FormularioItem catalogo={catalogo} />
+    </Tarjeta>
+  );
+}
+
+function ConceptosCaja({ conceptos }: { conceptos: Concepto[] }) {
+  return (
+    <Tarjeta titulo="Conceptos de caja" icono={ReceiptText}>
+      <p className="-mt-2 mb-5 text-sm text-suave">Con estos conceptos se cargan los cobros y gastos, y se arma el resumen de la caja.</p>
+      {(["egreso", "ingreso"] as const).map((tipo) => (
+        <section key={tipo} className="mb-5">
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-lila">{tipo === "egreso" ? "Gastos" : "Ingresos"}</h3>
+          <ul className="flex flex-col gap-2">
+            {conceptos.filter((c) => c.tipo === tipo).map((c) => (
+              <li key={c.id} className={`flex flex-wrap items-center gap-2 ${c.activo ? "" : "opacity-50"}`}>
+                {c.sistema ? (
+                  <span className={estiloFila + " min-w-0 flex-[1_1_16rem]"}>{c.nombre} <span className="text-xs text-suave">(se usa al cobrar sesiones)</span></span>
+                ) : (
+                  <form action={editarConcepto} className="flex min-w-0 flex-[1_1_16rem] gap-2">
+                    <input type="hidden" name="id" value={c.id} />
+                    <input name="nombre" defaultValue={c.nombre} aria-label="Nombre" required maxLength={60} className={estiloFila + " min-w-0 flex-1"} />
+                    <button type="submit" className="rounded-lg px-3 text-sm font-semibold text-suave hover:bg-lila-claro hover:text-lila">Guardar</button>
+                  </form>
+                )}
+                <form action={cambiarEstadoConcepto}>
+                  <input type="hidden" name="id" value={c.id} />
+                  <input type="hidden" name="activo" value={String(!c.activo)} />
+                  <BotonEstado activo={c.activo} />
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <FormularioConcepto />
     </Tarjeta>
   );
 }

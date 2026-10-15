@@ -7,6 +7,7 @@ import { etiquetaMedio, type MedioPago, type Rol } from "@/lib/tipos";
 import { Boton, Encabezado, Etiqueta, Indicador, MensajeError, Tarjeta, Vacio } from "@/components/ui";
 import { cambiarEstadoEstetica, cambiarEstadoPersona, marcarCobro, restablecerClaveAdmin } from "../../acciones";
 import { FormularioClave } from "@/components/formulario-clave";
+import type { SituacionPago } from "@/components/aviso-pago";
 import { FormularioCobro, FormularioDatosEstetica, FormularioPersona } from "../../formularios";
 
 type Persona = { usuario_id: string; nombre: string; email: string | null; rol: Rol; activo: boolean };
@@ -18,15 +19,16 @@ export default async function DetalleEstetica({ params, searchParams }: PageProp
 
   const { data: centro } = await supabase
     .from("centros")
-    .select("id, nombre, ciudad, estado, plan, precio_mensual, contacto_nombre, contacto_email, telefono, direccion, notas, creado_en")
+    .select("id, nombre, ciudad, estado, plan, precio_mensual, contacto_nombre, contacto_email, telefono, direccion, notas, creado_en, dia_vencimiento, dias_gracia, corte_automatico, suspendido_por_pago")
     .eq("id", id)
     .maybeSingle<Centro>();
   if (!centro) notFound();
 
-  const [{ data: equipo }, { data: cobros }, { data: uso }] = await Promise.all([
+  const [{ data: equipo }, { data: cobros }, { data: uso }, { data: pago }] = await Promise.all([
     supabase.from("miembros").select("usuario_id, nombre, email, rol, activo").eq("centro_id", id).order("activo", { ascending: false }).order("nombre").returns<Persona[]>(),
     supabase.from("cobros_gems").select("id, centro_id, concepto, periodo, monto, medio, estado, fecha, notas, anulado").eq("centro_id", id).order("fecha", { ascending: false }).returns<Cobro[]>(),
     supabase.rpc("resumen_centros"),
+    supabase.rpc("mi_situacion_pago", { c: id }).maybeSingle<SituacionPago>(),
   ]);
   const u = ((uso ?? []) as UsoCentro[]).find((x) => x.centro_id === id);
   const e = estadoCentro(centro.estado);
@@ -56,7 +58,17 @@ export default async function DetalleEstetica({ params, searchParams }: PageProp
 
       {typeof aviso === "string" && <div className="mb-6"><MensajeError>{aviso}</MensajeError></div>}
       {(centro.estado === "suspendido" || centro.estado === "baja") && (
-        <p className="mb-6 rounded-2xl bg-alerta-claro px-4 py-3 text-sm text-alerta">El equipo de esta estética no puede entrar mientras esté {e.etiqueta.toLowerCase()}. Sus datos quedan guardados.</p>
+        <p className="mb-6 rounded-2xl bg-alerta-claro px-4 py-3 text-sm text-alerta">
+          El equipo de esta estética no puede entrar mientras esté {e.etiqueta.toLowerCase()}. Sus datos quedan guardados.
+          {centro.suspendido_por_pago && " Se suspendió sola por falta de pago: al registrar la mensualidad del mes vuelve a funcionar."}
+        </p>
+      )}
+      {pago?.aplica && (
+        <p className={`mb-6 rounded-2xl px-4 py-3 text-sm ${pago.pagado ? "bg-emerald-50 text-emerald-700" : "bg-fondo text-tinta ring-1 ring-borde"}`}>
+          {pago.pagado
+            ? `La mensualidad de ${nombreMes(pago.periodo.slice(0, 7))} está pagada.`
+            : `Mensualidad de ${nombreMes(pago.periodo.slice(0, 7))}: vence el ${dia(pago.vence)}${centro.estado === "activo" ? `. Si el pago no está registrado al ${dia(pago.corte)}, se suspende al día siguiente` : ""}.`}
+        </p>
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

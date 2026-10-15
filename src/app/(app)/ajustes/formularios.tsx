@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { Boton, Input, MensajeError, Select } from "@/components/ui";
 import { CATEGORIAS, type EstadoFormulario } from "@/lib/tipos";
-import { agregarItem, crearMiembro } from "./acciones";
+import { agregarConcepto, agregarItem, crearMiembro } from "./acciones";
 import { Formulario } from "@/components/formulario";
 
 function useFormularioQueSeLimpia(accion: (estado: EstadoFormulario, formData: FormData) => Promise<EstadoFormulario>) {
@@ -41,6 +41,24 @@ export function FormularioMiembro() {
       <p className="text-xs text-suave">Pasale el email y la contraseña inicial; después la cambia desde “Mi cuenta”.</p>
       <Mensajes estado={estado} />
       <Boton type="submit" disabled={enviando} className="self-start">{enviando ? "Creando…" : "Agregar al equipo"}</Boton>
+    </Formulario>
+  );
+}
+
+export function FormularioConcepto() {
+  const { estado, despachar, enviando, form } = useFormularioQueSeLimpia(agregarConcepto);
+
+  return (
+    <Formulario ref={form} action={despachar} className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2">
+        <Input name="nombre" placeholder="Nuevo concepto (ej. Contador, Limpieza)" aria-label="Nombre" required maxLength={60} className="min-w-0 flex-[2_1_12rem]" />
+        <Select name="tipo" defaultValue="egreso" aria-label="Tipo" className="flex-[1_1_9rem]">
+          <option value="egreso">Gasto</option>
+          <option value="ingreso">Ingreso</option>
+        </Select>
+        <Boton type="submit" disabled={enviando}>Agregar</Boton>
+      </div>
+      <Mensajes estado={estado} />
     </Formulario>
   );
 }
