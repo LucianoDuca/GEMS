@@ -27,8 +27,16 @@ export async function proxy(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const autenticado = Boolean(data?.claims);
-  const enLogin = request.nextUrl.pathname.startsWith("/login");
+  const ruta = request.nextUrl.pathname;
+  const enLogin = ruta.startsWith("/login");
 
+  // La página pública de GEMS: se ve sin sesión. En la raíz, quien no entró ve la página y no el login.
+  if (ruta === "/sitio") return response;
+  if (!autenticado && ruta === "/") {
+    const reescritura = NextResponse.rewrite(new URL("/sitio", request.url));
+    response.cookies.getAll().forEach((cookie) => reescritura.cookies.set(cookie));
+    return reescritura;
+  }
   if (!autenticado && !enLogin) return redirigir(request, response, "/login");
   if (autenticado && enLogin) return redirigir(request, response, "/");
 

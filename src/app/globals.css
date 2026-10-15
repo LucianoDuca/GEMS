@@ -81,7 +81,22 @@ body {
 .tutorial-foco { transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease; }
 .tutorial-tarjeta { transition: top 0.35s ease, bottom 0.35s ease, left 0.35s ease; }
 
+/* ───────── Página pública ───────── */
+html:has(.sitio) { scroll-behavior: smooth; }
+.maqueta-flotar { animation: flotar 7s ease-in-out infinite; }
+.maqueta-flotar-2 { animation: flotar 6s ease-in-out 1s infinite; }
+@keyframes flotar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+/* Las secciones aparecen al llegar a ellas (donde el navegador lo soporta). */
+@supports (animation-timeline: view()) {
+  .aparecer { animation: aparecer linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html:has(.sitio) { scroll-behavior: auto; }
+  .maqueta-flotar, .maqueta-flotar-2, .aparecer { animation: none; }
   .animar-entrada, .animar-aparecer, .check-animado, .animar-latido,
   .bienvenida-diamante, .bienvenida-brillo, .bienvenida-onda, .bienvenida-texto { animation: none; }
   .bienvenida { animation-delay: 1.2s; }
