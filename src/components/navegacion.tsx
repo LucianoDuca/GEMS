@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Users, Wallet, Settings, CircleUserRound, Gem, LogOut, CalendarDays, CircleHelp } from "lucide-react";
+import { House, Users, Wallet, Settings, CircleUserRound, Gem, LogOut, CalendarDays, CircleHelp, ArrowLeftRight } from "lucide-react";
 import { abrirTutorial } from "@/components/tutorial";
 import type { LucideIcon } from "lucide-react";
 
@@ -27,12 +27,14 @@ export function Navegacion({
   nombre,
   centro,
   esAdmin,
+  variasSucursales = false,
   salir,
 }: {
   rol: "duena" | "operadora";
   nombre: string;
   centro: string;
   esAdmin: boolean;
+  variasSucursales?: boolean;
   salir: () => Promise<void>;
 }) {
   const pathname = usePathname();
@@ -45,10 +47,20 @@ export function Navegacion({
         <Link href="/" className="px-6 pb-6 pt-7">
           <Image src="/gems-logo-blanco.png" alt="GEMS" width={1200} height={276} priority className="h-auto w-36" />
         </Link>
-        <div className="mx-4 mb-4 rounded-2xl bg-white/10 px-4 py-3">
-          <div className="text-xs uppercase tracking-wider text-white/70">Centro</div>
-          <div className="truncate font-semibold">{centro}</div>
-        </div>
+        {variasSucursales ? (
+          <Link href="/sucursales" className="mx-4 mb-4 rounded-2xl bg-white/10 px-4 py-3 transition hover:bg-white/20">
+            <div className="flex items-center justify-between text-xs uppercase tracking-wider text-white/70">
+              Sucursal
+              <span className="flex items-center gap-1 normal-case tracking-normal"><ArrowLeftRight className="size-3.5" aria-hidden />Cambiar</span>
+            </div>
+            <div className="truncate font-semibold">{centro}</div>
+          </Link>
+        ) : (
+          <div className="mx-4 mb-4 rounded-2xl bg-white/10 px-4 py-3">
+            <div className="text-xs uppercase tracking-wider text-white/70">Centro</div>
+            <div className="truncate font-semibold">{centro}</div>
+          </div>
+        )}
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {items.map(({ href, texto, icono: Icono }) => (
             <Link
@@ -98,9 +110,10 @@ export function Navegacion({
 
       {/* Celular: barra superior */}
       <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-borde/70 bg-white/90 px-4 backdrop-blur lg:hidden">
-        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2.5">
+        <Link href={variasSucursales ? "/sucursales" : "/"} className="flex min-w-0 flex-1 items-center gap-2.5">
           <Image src="/gems-diamante.png" alt="" width={512} height={512} className="size-8" />
           <span className="truncate font-bold">{centro}</span>
+          {variasSucursales && <ArrowLeftRight className="size-4 shrink-0 text-lila" aria-label="Cambiar de sucursal" />}
         </Link>
         <button type="button" onClick={abrirTutorial} data-tour="tutorial" className="flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-bold text-suave hover:bg-fondo hover:text-lila">
           <CircleHelp className="size-4" aria-hidden />

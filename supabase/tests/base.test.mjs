@@ -233,5 +233,18 @@ ok("un turno puede indicar el servicio");
 const ajeno = (await db.query(`insert into tratamientos (centro_id, nombre, categoria) values ('${C2}','Ajeno','masajes') returning id`)).rows[0].id;
 await rechaza(como(OPERA, `insert into turnos (centro_id, cliente_id, categoria, tratamiento_id, inicio, fin) values ('${C}',$1,'masajes',$2,'2026-10-22T12:00:00-03:00','2026-10-22T12:30:00-03:00')`, [cli, ajeno]), "no se puede usar un servicio de otro centro");
 
+console.log("\nSucursales");
+await rechaza(como(DUENA, `select crear_sucursal('${C}','Sucursal Centro','Mendoza',30000)`), "una dueña no abre sucursales sola (lo hace GEMS)");
+const suc = (await como(ADMIN, `select crear_sucursal('${C}','Sucursal Centro','Mendoza',30000) id`)).rows[0].id;
+espera((await db.query("select grupo_id g from centros where id=$1", [suc])).rows[0].g === (await db.query("select grupo_id g from centros where id=$1", [C])).rows[0].g, "la sucursal queda en el mismo grupo que la estética");
+espera((await n(DUENA, `select count(*)::int n from tratamientos where centro_id='${suc}'`)) > 0, "la sucursal arranca con los mismos servicios");
+espera((await n(DUENA, `select count(*)::int n from conceptos_caja where centro_id='${suc}' and nombre='Limpieza'`)) === 1, "y con los conceptos de caja propios");
+espera((await n(DUENA, `select count(*)::int n from clientes where centro_id='${suc}'`)) === 0, "los clientes de cada sucursal van por separado");
+espera((await n(OPERA, `select count(*)::int n from tratamientos where centro_id='${suc}'`)) === 0, "una operadora no entra a otra sucursal si no la suman");
+const resumenSuc = (await como(DUENA, "select * from resumen_sucursales()")).rows;
+espera(resumenSuc.length === 2 && resumenSuc.some((r) => r.centro_id === suc), "la dueña ve el resumen de sus dos sucursales");
+espera((await como(OPERA, "select * from resumen_sucursales()")).rows.length === 0, "una operadora no ve el resumen conjunto");
+espera((await como(OTRO, "select * from resumen_sucursales()")).rows.every((r) => r.centro_id === C2), "otra estética solo ve lo suyo");
+
 console.log(fallas ? `\n${fallas} prueba(s) fallaron` : "\nTodas las pruebas pasaron");
 process.exit(fallas ? 1 : 0);

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { Building2, CalendarCheck, CircleCheck, CirclePause, CircleX, PencilLine, ReceiptText, ShieldCheck, Users, UsersRound } from "lucide-react";
+import Link from "next/link";
+import { Building2, Store, CalendarCheck, CircleCheck, CirclePause, CircleX, PencilLine, ReceiptText, ShieldCheck, Users, UsersRound } from "lucide-react";
 import { obtenerAdmin } from "@/lib/contexto";
 import { dia, fecha, hoyAR, pesos } from "@/lib/formato";
 import { estadoCentro, nombreMes, type Centro, type Cobro, type UsoCentro } from "@/lib/admin-datos";
@@ -8,7 +9,7 @@ import { Boton, Encabezado, Etiqueta, Indicador, MensajeError, Tarjeta, Vacio } 
 import { cambiarEstadoEstetica, cambiarEstadoPersona, marcarCobro, restablecerClaveAdmin } from "../../acciones";
 import { FormularioClave } from "@/components/formulario-clave";
 import type { SituacionPago } from "@/components/aviso-pago";
-import { FormularioCobro, FormularioDatosEstetica, FormularioPersona } from "../../formularios";
+import { FormularioCobro, FormularioDatosEstetica, FormularioPersona, FormularioSucursal } from "../../formularios";
 
 type Persona = { usuario_id: string; nombre: string; email: string | null; rol: Rol; activo: boolean };
 
@@ -19,16 +20,17 @@ export default async function DetalleEstetica({ params, searchParams }: PageProp
 
   const { data: centro } = await supabase
     .from("centros")
-    .select("id, nombre, ciudad, estado, plan, precio_mensual, contacto_nombre, contacto_email, telefono, direccion, notas, creado_en, dia_vencimiento, dias_gracia, corte_automatico, suspendido_por_pago")
+    .select("id, nombre, ciudad, estado, plan, precio_mensual, contacto_nombre, contacto_email, telefono, direccion, notas, creado_en, dia_vencimiento, dias_gracia, corte_automatico, suspendido_por_pago, grupo_id")
     .eq("id", id)
     .maybeSingle<Centro>();
   if (!centro) notFound();
 
-  const [{ data: equipo }, { data: cobros }, { data: uso }, { data: pago }] = await Promise.all([
+  const [{ data: equipo }, { data: cobros }, { data: uso }, { data: pago }, { data: hermanas }] = await Promise.all([
     supabase.from("miembros").select("usuario_id, nombre, email, rol, activo").eq("centro_id", id).order("activo", { ascending: false }).order("nombre").returns<Persona[]>(),
     supabase.from("cobros_gems").select("id, centro_id, concepto, periodo, monto, medio, estado, fecha, notas, anulado").eq("centro_id", id).order("fecha", { ascending: false }).returns<Cobro[]>(),
     supabase.rpc("resumen_centros"),
     supabase.rpc("mi_situacion_pago", { c: id }).maybeSingle<SituacionPago>(),
+    supabase.from("centros").select("id, nombre, ciudad, estado").eq("grupo_id", centro.grupo_id ?? id).neq("id", id).order("nombre"),
   ]);
   const u = ((uso ?? []) as UsoCentro[]).find((x) => x.centro_id === id);
   const e = estadoCentro(centro.estado);
@@ -112,6 +114,26 @@ export default async function DetalleEstetica({ params, searchParams }: PageProp
           )}
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-lila">Sumar persona</h3>
           <FormularioPersona centroId={centro.id} />
+        </Tarjeta>
+      </div>
+
+      <div className="mt-6">
+        <Tarjeta titulo="Sucursales" icono={Store}>
+          {hermanas?.length ? (
+            <ul className="mb-5 flex flex-wrap gap-2">
+              {hermanas.map((h) => (
+                <li key={h.id}>
+                  <Link href={`/admin/esteticas/${h.id}`} className="inline-flex items-center gap-2 rounded-xl border border-borde px-3 py-2 text-sm font-semibold hover:border-lila hover:text-lila">
+                    {h.nombre}
+                    {h.ciudad && <span className="font-normal text-suave">{h.ciudad}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="-mt-2 mb-4 text-sm text-suave">Esta estética tiene un solo local.</p>
+          )}
+          <FormularioSucursal centroId={centro.id} />
         </Tarjeta>
       </div>
 

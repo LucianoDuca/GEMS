@@ -7,10 +7,10 @@ import { FormularioFicha } from "./formulario";
 
 export default async function ActualizarFicha({ params }: PageProps<"/clientes/[id]/ficha">) {
   const { id } = await params;
-  const { supabase } = await obtenerContexto();
+  const { supabase, centroId } = await obtenerContexto();
 
   const [{ data: cliente }, { data: ficha }] = await Promise.all([
-    supabase.from("clientes").select("nombre_completo, dni").eq("id", id).maybeSingle(),
+    supabase.from("clientes").select("nombre_completo, dni").eq("id", id).eq("centro_id", centroId).maybeSingle(),
     supabase.from("fichas_vigentes").select("version, respuestas").eq("cliente_id", id).maybeSingle(),
   ]);
   if (!cliente) notFound();

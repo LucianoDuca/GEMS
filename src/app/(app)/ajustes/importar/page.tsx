@@ -6,12 +6,12 @@ import type { Categoria } from "@/lib/tipos";
 import { Importador } from "./importador";
 
 export default async function PaginaImportar() {
-  const { supabase, rol, centroNombre } = await obtenerContexto();
+  const { supabase, rol, centroNombre, centroId } = await obtenerContexto();
   if (rol !== "duena") redirect("/");
 
   const [{ data: tratamientos }, { data: zonas }] = await Promise.all([
-    supabase.from("tratamientos").select("nombre, categoria"),
-    supabase.from("zonas").select("nombre, abreviatura, categoria"),
+    supabase.from("tratamientos").select("nombre, categoria").eq("centro_id", centroId),
+    supabase.from("zonas").select("nombre, abreviatura, categoria").eq("centro_id", centroId),
   ]);
 
   return (

@@ -106,6 +106,21 @@ export async function actualizarEstetica(centroId: string, _: EstadoFormulario, 
   return { ok: "Cambios guardados." };
 }
 
+// Abre una sucursal nueva de la misma estética (copia servicios, zonas, conceptos y dueñas).
+export async function abrirSucursal(origenId: string, _: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const { supabase } = await obtenerAdmin();
+  const nombre = texto(formData, "nombre");
+  const precio = texto(formData, "precio") ? monto(formData, "precio") : null;
+  if (!nombre) return { error: "Falta el nombre de la sucursal." };
+  if (precio !== null && !(precio >= 0)) return { error: "El precio no es válido." };
+
+  const { data: id, error } = await supabase.rpc("crear_sucursal", { p_origen: origenId, p_nombre: nombre, p_ciudad: texto(formData, "ciudad"), p_precio: precio });
+  if (error || !id) return { error: "No se pudo abrir la sucursal." };
+
+  revalidatePath("/admin", "layout");
+  redirect(`/admin/esteticas/${id}`);
+}
+
 export async function cambiarEstadoEstetica(formData: FormData) {
   const { supabase } = await obtenerAdmin();
   const estado = texto(formData, "estado");

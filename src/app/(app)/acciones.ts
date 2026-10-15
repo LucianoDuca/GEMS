@@ -206,11 +206,11 @@ export async function anularMovimiento(formData: FormData) {
 
 // Búsqueda mientras se escribe: devuelve pocos resultados livianos.
 export async function buscarClientes(consulta: string) {
-  const { supabase } = await obtenerContexto();
+  const { supabase, centroId } = await obtenerContexto();
   const q = consulta.trim();
   if (q.length < 2) return [];
   const dni = q.replace(/[.\s-]/g, "");
-  const base = supabase.from("clientes").select("id, nombre_completo, dni, etiquetas").limit(8);
+  const base = supabase.from("clientes").select("id, nombre_completo, dni, etiquetas").eq("centro_id", centroId).limit(8);
   const { data } = /^[0-9]+$/.test(dni)
     ? await base.like("dni", `${dni}%`).order("dni")
     : await base.ilike("nombre_completo", `%${q.replace(/[%_]/g, "")}%`).order("nombre_completo");

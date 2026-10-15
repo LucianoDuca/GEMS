@@ -19,11 +19,12 @@ type Turno = {
 };
 
 // Turnos del día en el Inicio: los que faltan arriba, con un botón para atender.
-export async function TurnosHoy({ supabase, hoy }: { supabase: SupabaseClient; hoy: string }) {
+export async function TurnosHoy({ supabase, centroId, hoy }: { supabase: SupabaseClient; centroId: string; hoy: string }) {
   const { inicio, fin } = rangoDia(hoy);
   const { data } = await supabase
     .from("turnos")
     .select("id, cliente_id, nombre_provisorio, telefono_provisorio, categoria, inicio, estado, clientes (nombre_completo)")
+    .eq("centro_id", centroId)
     .gte("inicio", inicio)
     .lt("inicio", fin)
     .neq("estado", "cancelado")

@@ -7,11 +7,11 @@ import { Tutorial } from "@/components/tutorial";
 import { AvisoPago } from "@/components/aviso-pago";
 
 export default async function LayoutApp({ children }: LayoutProps<"/">) {
-  const { supabase, centroId, centroNombre, nombre, rol, esAdmin } = await obtenerContexto();
+  const { supabase, centroId, centroNombre, nombre, rol, esAdmin, sucursales } = await obtenerContexto();
 
   return (
     <>
-      <Navegacion rol={rol} nombre={nombre} centro={centroNombre} esAdmin={esAdmin} salir={salir} />
+      <Navegacion rol={rol} nombre={nombre} centro={centroNombre} esAdmin={esAdmin} variasSucursales={sucursales.length > 1} salir={salir} />
       <Suspense>
         <Avisos />
         <Tutorial rol={rol} />

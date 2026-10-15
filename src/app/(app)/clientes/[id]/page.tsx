@@ -35,6 +35,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
     .from("clientes")
     .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion, etiquetas")
     .eq("id", id)
+    .eq("centro_id", centroId)
     .maybeSingle<Cliente>();
   if (!cliente) notFound();
 

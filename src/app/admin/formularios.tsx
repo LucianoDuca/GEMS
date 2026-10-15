@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { Building2, Save, UserRoundPlus } from "lucide-react";
+import { Building2, Save, Store, UserRoundPlus } from "lucide-react";
 import { Boton, Campo, Input, MensajeError, MensajeOk, Select, Tarjeta, Textarea } from "@/components/ui";
 import { MEDIOS_PAGO, type EstadoFormulario } from "@/lib/tipos";
 import { CONCEPTOS, ESTADOS_CENTRO, PLANES, type Centro } from "@/lib/admin-datos";
-import { actualizarEstetica, agregarPersona, crearEstetica, registrarCobro } from "./acciones";
+import { abrirSucursal, actualizarEstetica, agregarPersona, crearEstetica, registrarCobro } from "./acciones";
 import { Formulario } from "@/components/formulario";
 
 function useLimpiarAlTerminar(estado: EstadoFormulario) {
@@ -128,6 +128,22 @@ export function FormularioDatosEstetica({ centro }: { centro: Centro }) {
       <MensajeError>{estado?.error}</MensajeError>
       <MensajeOk>{estado?.ok}</MensajeOk>
       <Boton type="submit" icono={Save} disabled={enviando} className="self-start">{enviando ? "Guardando…" : "Guardar cambios"}</Boton>
+    </Formulario>
+  );
+}
+
+export function FormularioSucursal({ centroId }: { centroId: string }) {
+  const [estado, accion, enviando] = useActionState(abrirSucursal.bind(null, centroId), undefined);
+  return (
+    <Formulario action={accion} className="flex flex-col gap-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Input name="nombre" placeholder="Nombre de la sucursal" aria-label="Nombre de la sucursal" required />
+        <Input name="ciudad" placeholder="Ciudad o barrio" aria-label="Ciudad o barrio" />
+        <Input name="precio" inputMode="decimal" placeholder="Precio mensual (igual si se deja vacío)" aria-label="Precio mensual" />
+      </div>
+      <p className="text-xs text-suave">Se copian los servicios, las zonas, los conceptos de caja y las dueñas. Los clientes, la agenda y la caja de cada sucursal van por separado.</p>
+      <MensajeError>{estado?.error}</MensajeError>
+      <Boton type="submit" icono={Store} disabled={enviando} className="self-start">{enviando ? "Abriendo…" : "Abrir sucursal"}</Boton>
     </Formulario>
   );
 }

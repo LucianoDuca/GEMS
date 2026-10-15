@@ -8,13 +8,13 @@ import { Avatar, BotonLink, Encabezado, Etiqueta, Tarjeta, Vacio } from "@/compo
 import { BuscadorClientes } from "@/components/buscador-clientes";
 
 export default async function Clientes({ searchParams }: PageProps<"/clientes">) {
-  const { supabase } = await obtenerContexto();
+  const { supabase, centroId } = await obtenerContexto();
   const { q } = await searchParams;
   const busqueda = typeof q === "string" ? q.trim() : "";
   const dni = busqueda.replace(/[.\s-]/g, "");
   const esDni = /^[0-9]{4,12}$/.test(dni);
 
-  const consulta = supabase.from("clientes").select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion");
+  const consulta = supabase.from("clientes").select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion").eq("centro_id", centroId);
   const { data } = !busqueda
     ? await consulta.order("creado_en", { ascending: false }).limit(30)
     : esDni

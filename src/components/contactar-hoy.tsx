@@ -22,14 +22,14 @@ type Pendiente = {
 };
 
 // Clientes a los que conviene escribirles hoy: les toca volver o cumplen años.
-export async function ContactarHoy({ supabase, centroNombre, hoy }: { supabase: SupabaseClient; centroNombre: string; hoy: string }) {
+export async function ContactarHoy({ supabase, centroId, centroNombre, hoy }: { supabase: SupabaseClient; centroId: string; centroNombre: string; hoy: string }) {
   const ahora = new Date();
   const mmdd = hoy.slice(5);
 
   const [{ data: ultimas }, { data: conNacimiento }, { data: contactos }] = await Promise.all([
-    supabase.from("ultimas_sesiones").select("cliente_id, categoria, realizada_en"),
-    supabase.from("clientes").select("id, fecha_nacimiento").not("fecha_nacimiento", "is", null).limit(5000),
-    supabase.from("contactos").select("cliente_id, motivo, contactado_en").gte("contactado_en", new Date(ahora.getTime() - 120 * 864e5).toISOString()),
+    supabase.from("ultimas_sesiones").select("cliente_id, categoria, realizada_en").eq("centro_id", centroId),
+    supabase.from("clientes").select("id, fecha_nacimiento").eq("centro_id", centroId).not("fecha_nacimiento", "is", null).limit(5000),
+    supabase.from("contactos").select("cliente_id, motivo, contactado_en").eq("centro_id", centroId).gte("contactado_en", new Date(ahora.getTime() - 120 * 864e5).toISOString()),
   ]);
 
   const ultimoContacto = new Map<string, string>();
@@ -58,6 +58,7 @@ export async function ContactarHoy({ supabase, centroNombre, hoy }: { supabase: 
   const { data: turnosManana } = await supabase
     .from("turnos")
     .select("id, categoria, inicio, nombre_provisorio, telefono_provisorio, clientes (nombre_completo, telefono)")
+    .eq("centro_id", centroId)
     .gte("inicio", rangoDia(manana).inicio)
     .lt("inicio", rangoDia(manana).fin)
     .in("estado", ["reservado", "confirmado"])
@@ -71,7 +72,7 @@ export async function ContactarHoy({ supabase, centroNombre, hoy }: { supabase: 
   });
 
   // Tocá volver: si ya tiene un turno futuro, no hace falta escribirle.
-  const { data: conTurno } = await supabase.from("turnos").select("cliente_id").gte("inicio", ahora.toISOString()).in("estado", ["reservado", "confirmado"]);
+  const { data: conTurno } = await supabase.from("turnos").select("cliente_id").eq("centro_id", centroId).gte("inicio", ahora.toISOString()).in("estado", ["reservado", "confirmado"]);
   const yaTienenTurno = new Set((conTurno ?? []).map((t) => t.cliente_id as string));
   const tocaVolverSinTurno = tocaVolver.filter((t) => !yaTienenTurno.has(t.clienteId));
 

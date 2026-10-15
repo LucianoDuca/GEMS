@@ -17,6 +17,7 @@ export type Centro = {
   dias_gracia?: number;
   corte_automatico?: boolean;
   suspendido_por_pago?: boolean;
+  grupo_id?: string;
 };
 
 export type UsoCentro = { centro_id: string; clientes: number; sesiones_mes: number; equipo: number; ultima_actividad: string | null };

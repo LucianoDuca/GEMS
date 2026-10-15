@@ -19,7 +19,7 @@ function saludo() {
 }
 
 export default async function Inicio({ searchParams }: PageProps<"/">) {
-  const { supabase, nombre, rol, centroNombre } = await obtenerContexto();
+  const { supabase, centroId, nombre, rol, centroNombre } = await obtenerContexto();
   const { bienvenida } = await searchParams;
   const hoy = hoyAR();
   const { inicio, fin } = rangoDia(hoy);
@@ -29,11 +29,12 @@ export default async function Inicio({ searchParams }: PageProps<"/">) {
     supabase
       .from("sesiones")
       .select("id, numero, categoria, realizada_en, anulada, clientes (id, nombre_completo)")
+      .eq("centro_id", centroId)
       .gte("realizada_en", inicio)
       .lt("realizada_en", fin)
       .order("realizada_en", { ascending: false }),
-    supabase.from("caja_movimientos").select("tipo, monto").eq("anulado", false).gte("registrado_en", inicio).lt("registrado_en", fin),
-    supabase.from("clientes").select("id", { count: "exact", head: true }).gte("creado_en", inicioMes),
+    supabase.from("caja_movimientos").select("tipo, monto").eq("centro_id", centroId).eq("anulado", false).gte("registrado_en", inicio).lt("registrado_en", fin),
+    supabase.from("clientes").select("id", { count: "exact", head: true }).eq("centro_id", centroId).gte("creado_en", inicioMes),
   ]);
 
   const sesionesHoy = (deHoy ?? []).filter((s) => !s.anulada);
@@ -75,13 +76,13 @@ export default async function Inicio({ searchParams }: PageProps<"/">) {
 
       <div data-tour="turnos-hoy">
         <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
-          <TurnosHoy supabase={supabase} hoy={hoy} />
+          <TurnosHoy supabase={supabase} centroId={centroId} hoy={hoy} />
         </Suspense>
       </div>
 
       <div data-tour="contactar">
         <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-white" />}>
-          <ContactarHoy supabase={supabase} centroNombre={centroNombre} hoy={hoy} />
+          <ContactarHoy supabase={supabase} centroId={centroId} centroNombre={centroNombre} hoy={hoy} />
         </Suspense>
       </div>
 

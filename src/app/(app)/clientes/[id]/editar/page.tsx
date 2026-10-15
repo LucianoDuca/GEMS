@@ -7,11 +7,12 @@ import { FormularioEditarCliente } from "./formulario";
 
 export default async function EditarCliente({ params }: PageProps<"/clientes/[id]/editar">) {
   const { id } = await params;
-  const { supabase } = await obtenerContexto();
+  const { supabase, centroId } = await obtenerContexto();
   const { data: cliente } = await supabase
     .from("clientes")
     .select("id, dni, nombre_completo, fecha_nacimiento, telefono, direccion, etiquetas, sexo")
     .eq("id", id)
+    .eq("centro_id", centroId)
     .maybeSingle<Cliente>();
   if (!cliente) notFound();
 
